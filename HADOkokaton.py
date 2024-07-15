@@ -276,18 +276,51 @@ class Explosion(pg.sprite.Sprite):
             self.kill()
         
 
+class Energy:
+    """
+    キャラクターのエネルギーに関するクラス
+    """
+    def __init__(self, player: int):
+        self.energy = 100
+        self.player = player
+        self.font = pg.font.Font(None, 50)
+        self.color = (0, 0, 255)
+        self.image = self.font.render(f"E: {self.energy}", 0, self.color)
+        self.rect = self.image.get_rect()
+        if self.player == 1:
+            self.rect.center = 900, HEIGHT-20
+        else:
+            self.rect.center = 100, HEIGHT-20
+
+    def reduce_energy(self):
+        self.energy -= 10
+
+    def charge_energy(self):
+        self.energy += 1
+    
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"E: {self.energy}", 0, self.color)
+        screen.blit(self.image, self.rect)
+        
+
 def main():
     pg.display.set_caption("HADOU!!こうかとん!!")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/background.jpg")
 
     charas1 = Chara_1(3, (WIDTH*3/4+20, HEIGHT/2+50))
+    energy1 = Energy(1)
     charas2 = Chara_2(32, (WIDTH/4-35, HEIGHT/2+45))
+    energy2 = Energy(2)
     beams1 = pg.sprite.Group()
     beams2 = pg.sprite.Group()
     exps = pg.sprite.Group()
 
     tmr = 0
+    P1s_flame = 1
+    P2s_flame = 1
+    P1_is_charging = False
+    P2_is_charging = False
     clock = pg.time.Clock()
     while True:
         key_lst = pg.key.get_pressed()
@@ -295,10 +328,25 @@ def main():
             if event.type == pg.QUIT:
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT:
-                beams1.add(Beam_1(charas1))# ビーム発射！
-                
+                if energy1.energy >= 10:  # エネルギーが残っていれば
+                    beams1.add(Beam_1(charas1))# ビーム発射！
+                    energy1.reduce_energy()
+                    charas1.change_img(1, screen)
             if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
-                beams2.add(Beam_2(charas2))# ビーム発射！
+                if energy2.energy >= 10:  # エネルギーが残っていれば
+                    beams2.add(Beam_2(charas2))# ビーム発射！
+                    energy2.reduce_energy()
+            if event.type == pg.KEYDOWN and event.key == pg.K_RCTRL:  # 左ctclを押したとき
+                P1_is_charging = True
+            if event.type == pg.KEYUP and event.key == pg.K_RCTRL:  # 左ctclを離したとき
+                P1_is_charging = False
+                P1s_flame = 1
+                charas1.image = charas1.imgs[(-1, 0)]
+
+        if P1_is_charging:  # P1がボタンを押しているとき  
+            P1s_flame +=1
+        if P1s_flame % 4 == 0:
+            energy1.charge_energy()   # エネルギーをチャージする
         screen.blit(bg_img, [0, 0])
         
         # chara1とビームの当たり判定
@@ -323,7 +371,11 @@ def main():
         #line = pg.Surface((WIDTH, HEIGHT))
         #pg.draw.line(screen, (255, 0, 0), (0, 680), (WIDTH, 680), 2)
 
-        charas1.update(key_lst, screen)
+        if P1_is_charging:
+            charas1.change_img(1, screen)
+        else:
+            charas1.update(key_lst, screen)
+        energy1.update(screen)
         charas2.update(key_lst, screen)
         beams1.update()
         beams1.draw(screen)
