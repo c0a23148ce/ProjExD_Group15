@@ -286,7 +286,87 @@ class Explosion(pg.sprite.Sprite):
         self.image = self.imgs[self.life//10%2]
         if self.life < 0:
             self.kill()
+        
 
+class Hp_bar:
+    """
+    HPバーの表示に関するクラス
+    """
+    def __init__(self):
+        """
+        HPバー画像Surfaceを生成する
+        """
+        self.hp_rct = [WIDTH/2-525,25]
+        self.hp_img = pg.image.load(f"fig/hp2.png") #hpバー
+        self.hp_img = pg.transform.scale(self.hp_img, (1052, 100)) #hpバー画像のサイズ調整 
+        self.time = 0
+    
+    def update(self, screen: pg.Surface):
+        """
+        経過時間表示
+        引数 screen：画面Surface
+        """
+        self.black = pg.Surface((90, 27)) #hpバーの元画像も数字を消すためのsurfac
+        screen.blit(self.hp_img, self.hp_rct) #hpバー表示
+        pg.draw.rect(self.black,(0, 0, 0), (0, 0, WIDTH-599, 100)) #黒四角形を生成
+        screen.blit(self.black, [WIDTH-599, 60]) #黒四角形表示
+        fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
+        txt = fonto.render(str(self.time//50), True, (255, 0, 0))
+        self.time += 1
+        if self.time <= 500: #1桁の時
+            screen.blit(txt, [WIDTH/2-5, 58])
+        elif 500 < self.time <= 5000: #2桁の時
+            screen.blit(txt, [WIDTH/2-12, 58])
+        elif 5000 < self.time <= 49950: #3桁の時
+            screen.blit(txt, [WIDTH/2-20, 58])
+        else: #上記以外の時(999以上の時)
+            max = fonto.render(str(999), True, (255, 0, 0)) #999で固定
+            screen.blit(max, [WIDTH/2-20, 58])
+
+
+class Player1_hp:
+    """
+    プレイヤー1のHPに関するクラス
+    """
+    def __init__(self):
+        """
+        残りHPを計数
+        """
+        self.hp_value = 464  #現在のhp
+        self.hp_xy = [WIDTH-499, 65]
+
+    def update(self, screen: pg.Surface):
+        """
+        横464縦16のHPバーSurfaceを生成する
+        爆弾に当たった時にHPの四角形を更新
+        引数 screen：画面Surface
+        """
+        self.hp = pg.Surface((464, 16)) #player1のHPバーSurfaceを生成
+        pg.draw.rect(self.hp,(0, 255, 0), (0, 0, self.hp_value, 25)) #残りHPを更新
+        screen.blit(self.hp, self.hp_xy) #残りHPを表示
+
+
+class Player2_hp:
+    """
+    プレイヤー2のHPに関するクラス
+    """
+    def __init__(self):
+        """
+        被ダメージを計数
+        """
+        self.damage_value = 0  #被ダメージ
+        self.hp_xy = [40, 65] 
+
+    def update(self, screen: pg.Surface):
+        """
+        横461縦16のHPバーSurfaceを生成する
+        爆弾に当たった時にHPの四角形を更新
+        引数 screen：画面Surface
+        """
+        self.hp = pg.Surface((461, 16)) #player2のHPバーSurfaceを生成
+        pg.draw.rect(self.hp,(0, 255, 0), (self.damage_value, 0, 461, 25)) #残りHPを更新
+        screen.blit(self.hp, self.hp_xy) #残りHPを表示
+        
 
 class CPU_1(pg.sprite.Sprite):
     """
@@ -616,8 +696,6 @@ def main():
     exps = pg.sprite.Group()
     cpu_flag = False
 
-    tmr = 0
-    clock = pg.time.Clock()
 
     f1 = CPU_Effect((1001, 235), "blue")
     f2 = CPU_Effect((1002, 571), "blue")
@@ -638,6 +716,9 @@ def main():
 
     tmr = 0
     clock = pg.time.Clock()
+    player1_hp = Player1_hp()
+    player2_hp = Player2_hp()
+    hp_bar = Hp_bar()
     while True:
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
@@ -677,21 +758,33 @@ def main():
         
         # chara1とビームの当たり判定
         if len(pg.sprite.spritecollide(charas1, beams2, True)) != 0:
+            player1_hp.hp_value -= 50 #HPを50減らす
             exps.add(Explosion(charas1, 100))  # 爆発エフェクト
-            charas2.change_img(62, screen)  # こうかとん喜びエフェクト
-            charas1.change_img(8, screen) # こうかとん悲しみエフェクト
-            pg.display.update()
-            time.sleep(2)
-            return
+            if player1_hp.hp_value <= 0: #残りHPが0以下の時
+                exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+                charas2.change_img(62, screen)  # こうかとん喜びエフェクト
+                charas1.change_img(8, screen) # こうかとん悲しみエフェクト
+                hp_bar.update(screen)
+                player1_hp.update(screen)
+                player2_hp.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                return
         
         #  chara2とChara1が打ったビームの当たり判定
         if len(pg.sprite.spritecollide(charas2, beams1, True)) != 0:
+            player2_hp.damage_value += 50 #被ダメージを50増やす
             exps.add(Explosion(charas2, 100))  # 爆発エフェクト
-            charas1.change_img(6, screen)  # こうかとん喜びエフェクト
-            charas2.change_img(82, screen) # こうかとん悲しみエフェクト
-            pg.display.update()
-            time.sleep(2)
-            return
+            if player2_hp.damage_value >= 461: #被ダメージがHPを超えた時
+                exps.add(Explosion(charas2, 100))  # 爆発エフェクト
+                charas1.change_img(6, screen)  # こうかとん喜びエフェクト
+                charas2.change_img(82, screen) # こうかとん悲しみエフェクト
+                hp_bar.update(screen)
+                player1_hp.update(screen)
+                player2_hp.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                return
         
         
         #  chara2とcpu1が打ったビームの当たり判定
@@ -787,8 +880,8 @@ def main():
 
 
         # 座標確認用(座標を確認したいときに使ってね！)
-        #line = pg.Surface((WIDTH, HEIGHT))
-        #pg.draw.line(screen, (255, 0, 0), (0, 680), (WIDTH, 680), 2)
+        # line = pg.Surface((WIDTH, HEIGHT))
+        # pg.draw.line(screen, (255, 0, 0), (0, 680), (WIDTH, 680), 2)
 
         charas1.update(key_lst, screen)
         charas2.update(key_lst, screen)
@@ -802,6 +895,9 @@ def main():
         cpu2_beams.draw(screen)
         exps.update()
         exps.draw(screen)
+        hp_bar.update(screen)
+        player1_hp.update(screen)
+        player2_hp.update(screen)
         skillpoint1.draw_gauge(screen, WIDTH -50, 70, 50, skill_gauge_value_1, max_value_1)
         skill1.update()
         skill1.draw(screen)
