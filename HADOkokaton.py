@@ -779,8 +779,8 @@ def main():
         # chara1とchara2スキルの当たり判定
         if len(pg.sprite.spritecollide(charas1, skill2, True)) != 0:
             exps.add(Explosion(charas1, 100))  # 爆発エフェクト
-            charas2.change_img(6, screen)  # こうかとん喜びエフェクト
-            charas1.change_img(82, screen) # こうかとん悲しみエフェクト
+            charas2.change_img(8, screen)  # こうかとん喜びエフェクト
+            charas1.change_img(62, screen) # こうかとん悲しみエフェクト
             pg.display.update()
             time.sleep(2)
             return
