@@ -20,11 +20,7 @@ def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
     yoko, tate = True, True
     if obj_rct.left < 0 or WIDTH < obj_rct.right:
         yoko = False
-<<<<<<< HEAD
     if obj_rct.top < 124 or 680 < obj_rct.bottom:
-=======
-    if obj_rct.top < 0 or HEIGHT < obj_rct.bottom:
->>>>>>> origin/main
         tate = False
     return yoko, tate
 
@@ -50,18 +46,13 @@ def check_bound_player2(obj_rct: pg.Rect) -> tuple[bool, bool]:
     戻り値：横方向，縦方向のはみ出し判定結果（コート内：True／コート外：False）
     """
     yoko, tate = True, True
-<<<<<<< HEAD
     if obj_rct.right > WIDTH/2+20 or 0 > obj_rct.left:
-=======
-    if obj_rct.right > WIDTH/2+3 or 0 > obj_rct.left:
->>>>>>> origin/main
         yoko = False
     if obj_rct.top < 124 or 680 < obj_rct.bottom:
         tate = False
     return yoko, tate
 
 
-<<<<<<< HEAD
 def calc_orientation(org: pg.Rect, dst: pg.Rect) -> tuple[float, float]:
     """
     orgから見て，dstがどこにあるかを計算し，方向ベクトルをタプルで返す
@@ -74,8 +65,6 @@ def calc_orientation(org: pg.Rect, dst: pg.Rect) -> tuple[float, float]:
     return x_diff/norm, y_diff/norm
 
 
-=======
->>>>>>> origin/main
 class Chara_1(pg.sprite.Sprite):
     """
     ゲームキャラクター（こうかとん）に関するクラス
@@ -218,11 +207,7 @@ class Beam_1(pg.sprite.Sprite):
     def __init__(self, chara: Chara_1):
         """
         ビーム画像Surfaceを生成する
-<<<<<<< HEAD
         引数 chara：ビームを放つキャラクター
-=======
-        引数 bird：ビームを放つキャラクター
->>>>>>> origin/main
         """
         super().__init__()
         self.vx, self.vy = chara.dire
@@ -252,11 +237,7 @@ class Beam_2(pg.sprite.Sprite):
     def __init__(self, chara: Chara_2):
         """
         ビーム画像Surfaceを生成する
-<<<<<<< HEAD
         引数 chara：ビームを放つキャラクター
-=======
-        引数 bird：ビームを放つキャラクター
->>>>>>> origin/main
         """
         super().__init__()
         self.vx, self.vy = chara.dire
@@ -305,7 +286,6 @@ class Explosion(pg.sprite.Sprite):
         self.image = self.imgs[self.life//10%2]
         if self.life < 0:
             self.kill()
-<<<<<<< HEAD
 
 
 class CPU_1(pg.sprite.Sprite):
@@ -455,8 +435,6 @@ class CPU_Effect(pg.sprite.Sprite):
         self.image.set_alpha(self.alpha)
         screen.blit(self.image, self.rect)
         self.tmr += 1
-=======
->>>>>>> origin/main
         
 class Skill_cut_1(pg.sprite.Sprite):
     """
@@ -629,7 +607,6 @@ def main():
     charas2 = Chara_2(32, (WIDTH/4-35, HEIGHT/2+45))
     beams1 = pg.sprite.Group()
     beams2 = pg.sprite.Group()
-<<<<<<< HEAD
 
     cpu1 = pg.sprite.Group()
     cpu2 = pg.sprite.Group()
@@ -646,7 +623,6 @@ def main():
     f2 = CPU_Effect((1002, 571), "blue")
     f3 = CPU_Effect((107, 236), "yellow")
     f4 = CPU_Effect((107, 570), "yellow")
-=======
     exps = pg.sprite.Group()
 
     # スキル1,2の初期設定
@@ -662,7 +638,6 @@ def main():
 
     tmr = 0
     clock = pg.time.Clock()
->>>>>>> origin/main
     while True:
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
@@ -674,7 +649,6 @@ def main():
             if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
                 beams2.add(Beam_2(charas2))# ビーム発射！
         screen.blit(bg_img, [0, 0])
-<<<<<<< HEAD
 
         if tmr<=500:
             f1.update(screen)
@@ -700,10 +674,8 @@ def main():
         #  ここから当たり判定
         
         #  chara1とchara2が打ったビームの当たり判定
-=======
         
         # chara1とビームの当たり判定
->>>>>>> origin/main
         if len(pg.sprite.spritecollide(charas1, beams2, True)) != 0:
             exps.add(Explosion(charas1, 100))  # 爆発エフェクト
             charas2.change_img(62, screen)  # こうかとん喜びエフェクト
@@ -712,11 +684,7 @@ def main():
             time.sleep(2)
             return
         
-<<<<<<< HEAD
         #  chara2とChara1が打ったビームの当たり判定
-=======
-        # chara2とビームの当たり判定
->>>>>>> origin/main
         if len(pg.sprite.spritecollide(charas2, beams1, True)) != 0:
             exps.add(Explosion(charas2, 100))  # 爆発エフェクト
             charas1.change_img(6, screen)  # こうかとん喜びエフェクト
@@ -724,7 +692,6 @@ def main():
             pg.display.update()
             time.sleep(2)
             return
-<<<<<<< HEAD
         
         
         #  chara2とcpu1が打ったビームの当たり判定
@@ -779,7 +746,6 @@ def main():
         cpu1.draw(screen)
         cpu2.update()
         cpu2.draw(screen)
-=======
 
         # chara1の必殺技
         if skill_gauge_value_1 == 100 and event.type == pg.KEYDOWN and event.key == pg.K_RCTRL:
@@ -813,8 +779,8 @@ def main():
         # chara1とchara2スキルの当たり判定
         if len(pg.sprite.spritecollide(charas1, skill2, True)) != 0:
             exps.add(Explosion(charas1, 100))  # 爆発エフェクト
-            charas2.change_img(6, screen)  # こうかとん喜びエフェクト
-            charas1.change_img(82, screen) # こうかとん悲しみエフェクト
+            charas2.change_img(8, screen)  # こうかとん喜びエフェクト
+            charas1.change_img(62, screen) # こうかとん悲しみエフェクト
             pg.display.update()
             time.sleep(2)
             return
@@ -824,20 +790,16 @@ def main():
         #line = pg.Surface((WIDTH, HEIGHT))
         #pg.draw.line(screen, (255, 0, 0), (0, 680), (WIDTH, 680), 2)
 
->>>>>>> origin/main
         charas1.update(key_lst, screen)
         charas2.update(key_lst, screen)
         beams1.update()
         beams1.draw(screen)
         beams2.update()
         beams2.draw(screen)
-<<<<<<< HEAD
         cpu1_beams.update()
         cpu1_beams.draw(screen)
         cpu2_beams.update()
         cpu2_beams.draw(screen)
-=======
->>>>>>> origin/main
         exps.update()
         exps.draw(screen)
         skillpoint1.draw_gauge(screen, WIDTH -50, 70, 50, skill_gauge_value_1, max_value_1)
