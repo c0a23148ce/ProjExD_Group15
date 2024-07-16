@@ -324,7 +324,7 @@ class CPU_2(pg.sprite.Sprite):
         self.image = pg.image.load(f"fig/CPU2_2.png")
         self.rect = self.image.get_rect()
         self.rect.center = xy
-        self.vx, self.vy = 3, 3
+        self.vx, self.vy = -3, -3
 
     def update(self):
         """
