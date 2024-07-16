@@ -352,8 +352,8 @@ class Skillpoint_1:
         start_angle_1 = 90  #90度から描画する
         end_angle_1 = start_angle_1 + 270/360 * angle_1
         pg.draw.arc(surface, (0, 0, 255), (x - radius_1, y - radius_1, 2 * radius_1, 2 * radius_1), math.radians(start_angle_1), math.radians(end_angle_1), width=radius_1)
-        pg.draw.circle(surface, (0, 0, 0), (x, y), radius_1/2)
-        pg.draw.rect(surface, (0, 0, 0), (x, y - radius_1, radius_1, radius_1))
+        pg.draw.circle(surface, (0, 0, 0), (x, y), radius_1/2) # 内側の円
+        pg.draw.rect(surface, (0, 0, 0), (x, y - radius_1, radius_1, radius_1)) # 形を整えるための右上の四角
         surface.blit(self.gauge_img0_1, (x, y - radius_1))
 
 class Skill_cut_2(pg.sprite.Sprite):
@@ -433,8 +433,8 @@ class Skillpoint_2:
         start_angle_2 = 90  #90度から描画する
         end_angle_2 = start_angle_2 + 270/360 * angle_2
         pg.draw.arc(surface, (0, 0, 255), (x - radius_2, y - radius_2, 2 * radius_2, 2 * radius_2), math.radians(start_angle_2), math.radians(end_angle_2), width=radius_2)
-        pg.draw.circle(surface, (0, 0, 0), (x, y), radius_2/2)
-        pg.draw.rect(surface, (0, 0, 0), (x, y - radius_2, radius_2, radius_2))
+        pg.draw.circle(surface, (0, 0, 0), (x, y), radius_2/2) # 内側の円
+        pg.draw.rect(surface, (0, 0, 0), (x, y - radius_2, radius_2, radius_2)) # 形を整えるための右上の四角
         surface.blit(self.gauge_img0_2, (x, y - radius_2))
 
 def main():
@@ -447,14 +447,15 @@ def main():
     beams1 = pg.sprite.Group()
     beams2 = pg.sprite.Group()
     exps = pg.sprite.Group()
+
+    # スキル1,2の初期設定
     skill1 = pg.sprite.Group()
     skill2 = pg.sprite.Group()
-
     skillpoint1 = Skillpoint_1()
-    skill_gauge_value_1 = 0
-    max_value_1 = 100
     skillpoint2 = Skillpoint_2()
+    skill_gauge_value_1 = 0
     skill_gauge_value_2 = 0
+    max_value_1 = 100
     max_value_2 = 100
 
 
@@ -490,13 +491,13 @@ def main():
             time.sleep(2)
             return
 
-        #chara1の必殺技
+        # chara1の必殺技
         if skill_gauge_value_1 == 100 and event.type == pg.KEYDOWN and event.key == pg.K_RCTRL:
             #skill.add(Skill_1(35, 300, screen))
             skill1.add(Skill_1(charas1))# スキル発射！
             skill_gauge_value_1 = 0
-        
-        #ゲージの変化
+
+        # スキルゲージの変化
         if skill_gauge_value_1 != max_value_1: # ゲージを増やす
             skill_gauge_value_1 += 0.25
 
@@ -509,13 +510,13 @@ def main():
             time.sleep(2)
             return
         
-        #chara2の必殺技
+        # chara2の必殺技
         if skill_gauge_value_2 == 100 and event.type == pg.KEYDOWN and event.key == pg.K_LCTRL:
             #skill.add(Skill_2(35, 300, screen))
             skill2.add(Skill_2(charas2))# スキル発射！
             skill_gauge_value_2 = 0
         
-        #ゲージの変化
+        # スキルゲージの変化
         if skill_gauge_value_2 != max_value_2: # ゲージを増やす
             skill_gauge_value_2 += 0.25
 
