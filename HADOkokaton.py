@@ -354,7 +354,7 @@ class Player2_hp:
         self.hp = pg.Surface((461, 16)) #player2のHPバーSurfaceを生成
         pg.draw.rect(self.hp,(0, 255, 0), (self.damage_value, 0, 461, 25)) #残りHPを更新
         screen.blit(self.hp, self.hp_xy) #残りHPを表示
-        
+
 
 def main():
     pg.display.set_caption("HADOU!!こうかとん!!")
