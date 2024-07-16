@@ -102,6 +102,8 @@ class Chara_1(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = xy
         self.speed = 8
+        self.state = "normal" # 状態の変数
+        self.hyper_life = -1 # 発動時間の変数
 
     def change_img(self, num: int, screen: pg.Surface):
         """
@@ -131,6 +133,11 @@ class Chara_1(pg.sprite.Sprite):
             self.dire = tuple(sum_mv)
             self.image = self.imgs[self.dire]
         screen.blit(self.image, self.rect)
+
+        if self.state == "hyper": # バリア時間の処理
+            self.hyper_life -= 1
+            if self.hyper_life < 0:
+                self.state = "normal"
 
 
 class Chara_2(pg.sprite.Sprite):
@@ -169,6 +176,8 @@ class Chara_2(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = xy
         self.speed = 8
+        self.state = "normal" # 状態の変数
+        self.hyper_life = -1 # 発動時間の変数
 
     def change_img(self, num: int, screen: pg.Surface):
         """
@@ -198,6 +207,11 @@ class Chara_2(pg.sprite.Sprite):
             self.dire = tuple(sum_mv)
             self.image = self.imgs[self.dire]
         screen.blit(self.image, self.rect)
+
+        if self.state == "hyper": # バリア時間の処理
+            self.hyper_life -= 1
+            if self.hyper_life < 0:
+                self.state = "normal"
 
 
 class Beam_1(pg.sprite.Sprite):
@@ -286,6 +300,51 @@ class Explosion(pg.sprite.Sprite):
         self.image = self.imgs[self.life//10%2]
         if self.life < 0:
             self.kill()
+            
+
+class Barrier1(pg.sprite.Sprite):
+    """
+    chara1が無敵化時のバリアを描く
+    """
+    def __init__(self, chara1: Chara_1):
+        super().__init__()
+        rad = 80
+        self.image = pg.Surface((2*rad, 2*rad))
+        color = (211, 237, 251)
+        pg.draw.circle(self.image, color, (rad, rad), rad)
+        self.image.set_alpha(150)
+        self.image.set_colorkey((0, 0, 0))
+        self.rect = self.image.get_rect()
+        self.rect.center = chara1.rect.center
+
+    def update(self,chara1: Chara_1):
+        """
+        chara1の動きに従ってバリアを動かす
+        """
+        self.rect.center = chara1.rect.center
+
+
+class Barrier2(pg.sprite.Sprite):
+    """
+    chara2が無敵化時のバリアを描く
+    """
+    def __init__(self, chara2: Chara_2):
+        super().__init__()
+        rad = 80
+        self.image = pg.Surface((2*rad, 2*rad))
+        color = (211, 237, 251)
+        pg.draw.circle(self.image, color, (rad, rad), rad)
+        self.image.set_alpha(150)
+        self.image.set_colorkey((0, 0, 0))
+        self.rect = self.image.get_rect()
+        self.rect.center = chara2.rect.center
+
+    def update(self,chara2: Chara_2):
+        """
+        chara2の動きに従ってバリアを動かす
+        """
+        self.rect.center = chara2.rect.center
+
         
 
 class Hp_bar:
@@ -702,6 +761,8 @@ def main():
     f3 = CPU_Effect((107, 236), "yellow")
     f4 = CPU_Effect((107, 570), "yellow")
     exps = pg.sprite.Group()
+    barrier1 = pg.sprite.Group()
+    barrier2 = pg.sprite.Group()
 
     # スキル1,2の初期設定
     skill1 = pg.sprite.Group()
@@ -716,6 +777,10 @@ def main():
 
     tmr = 0
     clock = pg.time.Clock()
+    key_hold_time1 = 0  # chara1のバリア判定用のキー押下時間
+    key_hold_time2 = 0  # chara2のバリア判定用のキー押下時間
+    hold_time = 1  # バリアを発動するために必要なキーフレーム数
+
     player1_hp = Player1_hp()
     player2_hp = Player2_hp()
     hp_bar = Hp_bar()
@@ -726,7 +791,7 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT:
                 beams1.add(Beam_1(charas1))# ビーム発射！
-                
+
             if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
                 beams2.add(Beam_2(charas2))# ビーム発射！
         screen.blit(bg_img, [0, 0])
@@ -758,70 +823,76 @@ def main():
         
         # chara1とビームの当たり判定
         if len(pg.sprite.spritecollide(charas1, beams2, True)) != 0:
-            player1_hp.hp_value -= 50 #HPを50減らす
-            exps.add(Explosion(charas1, 100))  # 爆発エフェクト
-            if player1_hp.hp_value <= 0: #残りHPが0以下の時
+            if charas1.state != "hyper":
+                player1_hp.hp_value -= 50 #HPを50減らす
                 exps.add(Explosion(charas1, 100))  # 爆発エフェクト
-                charas2.change_img(62, screen)  # こうかとん喜びエフェクト
-                charas1.change_img(8, screen) # こうかとん悲しみエフェクト
-                hp_bar.update(screen)
-                player1_hp.update(screen)
-                player2_hp.update(screen)
-                pg.display.update()
-                time.sleep(2)
-                return
+                if player1_hp.hp_value <= 0: #残りHPが0以下の時
+                    exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+                    charas2.change_img(62, screen)  # こうかとん喜びエフェクト
+                    charas1.change_img(8, screen) # こうかとん悲しみエフェクト
+                    hp_bar.update(screen)
+                    player1_hp.update(screen)
+                    player2_hp.update(screen)
+                    pg.display.update()
+                    time.sleep(2)
+                    return
         
         #  chara2とChara1が打ったビームの当たり判定
         if len(pg.sprite.spritecollide(charas2, beams1, True)) != 0:
-            player2_hp.damage_value += 50 #被ダメージを50増やす
-            exps.add(Explosion(charas2, 100))  # 爆発エフェクト
-            if player2_hp.damage_value >= 461: #被ダメージがHPを超えた時
+            if charas2.state != "hyper":
+                player2_hp.damage_value += 50 #被ダメージを50増やす
+                exps.add(Explosion(charas2, 100))  # 爆発エフェクト
+                if player2_hp.damage_value >= 461: #被ダメージがHPを超えた時
+                    exps.add(Explosion(charas2, 100))  # 爆発エフェクト
+                    charas1.change_img(6, screen)  # こうかとん喜びエフェクト
+                    charas2.change_img(82, screen) # こうかとん悲しみエフェクト
+                    hp_bar.update(screen)
+                    player1_hp.update(screen)
+                    player2_hp.update(screen)
+                    pg.display.update()
+                    time.sleep(2)
+                    return
+        
+        
+        #  chara2とcpu1_aが打ったビームの当たり判定
+        if len(pg.sprite.spritecollide(charas2, cpu1_beams, True)) != 0:
+            if charas2.state != "hyper":
                 exps.add(Explosion(charas2, 100))  # 爆発エフェクト
                 charas1.change_img(6, screen)  # こうかとん喜びエフェクト
                 charas2.change_img(82, screen) # こうかとん悲しみエフェクト
-                hp_bar.update(screen)
-                player1_hp.update(screen)
-                player2_hp.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                return
+            
+        #  chara2とcpu1_bが打ったビームの当たり判定
+        if len(pg.sprite.spritecollide(charas2, cpu1_beams, True)) != 0:
+            if charas2.state != "hyper":
+                exps.add(Explosion(charas2, 100))  # 爆発エフェクト
+                charas1.change_img(6, screen)  # こうかとん喜びエフェクト
+                charas2.change_img(82, screen) # こうかとん悲しみエフェクト
                 pg.display.update()
                 time.sleep(2)
                 return
         
-        
-        #  chara2とcpu1が打ったビームの当たり判定
-        if len(pg.sprite.spritecollide(charas2, cpu1_beams, True)) != 0:
-            exps.add(Explosion(charas2, 100))  # 爆発エフェクト
-            charas1.change_img(6, screen)  # こうかとん喜びエフェクト
-            charas2.change_img(82, screen) # こうかとん悲しみエフェクト
-            pg.display.update()
-            time.sleep(2)
-            return
-        
-        #  chara2とcpu2が打ったビームの当たり判定
-        if len(pg.sprite.spritecollide(charas2, cpu1_beams, True)) != 0:
-            exps.add(Explosion(charas2, 100))  # 爆発エフェクト
-            charas1.change_img(6, screen)  # こうかとん喜びエフェクト
-            charas2.change_img(82, screen) # こうかとん悲しみエフェクト
-            pg.display.update()
-            time.sleep(2)
-            return
-        
         #  CPU2_aとchara1の当たり判定
         if len(pg.sprite.spritecollide(charas1, cpu2_beams, True)) != 0:
-            exps.add(Explosion(charas1, 100))  # 爆発エフェクト
-            charas2.change_img(62, screen)  # こうかとん喜びエフェクト
-            charas1.change_img(8, screen) # こうかとん悲しみエフェクト
-            pg.display.update()
-            time.sleep(2)
-            return  
+            if charas1.state != "hyper":
+                exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+                charas2.change_img(62, screen)  # こうかとん喜びエフェクト
+                charas1.change_img(8, screen) # こうかとん悲しみエフェクト
+                pg.display.update()
+                time.sleep(2)
+                return  
         
         #  cpu2_bとchara1の当たり判定
         if len(pg.sprite.spritecollide(charas1, cpu2_beams, True)) != 0:
-            exps.add(Explosion(charas1, 100))  # 爆発エフェクト
-            charas2.change_img(62, screen)  # こうかとん喜びエフェクト
-            charas2.change_img(8, screen) # こうかとん悲しみエフェクト
-            pg.display.update()
-            time.sleep(2)
-            return
+            if charas1.state != "hyper":
+                exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+                charas2.change_img(62, screen)  # こうかとん喜びエフェクト
+                charas2.change_img(8, screen) # こうかとん悲しみエフェクト
+                pg.display.update()
+                time.sleep(2)
+                return
         
         #  chara1とcpu2の当たり判定
         for cpu in pg.sprite.groupcollide(cpu2, beams1, True, True).keys():
@@ -878,13 +949,46 @@ def main():
             time.sleep(2)
             return
 
+        
+        keys = pg.key.get_pressed()
+        # ↑, ↓, ←, →が同時押しされていればcharas1のバリア
+        if keys[pg.K_UP] and keys[pg.K_DOWN] and keys[pg.K_LEFT] and keys[pg.K_RIGHT]:
+            key_hold_time1 += 1
+            if key_hold_time1 >= hold_time and charas1.state != "hyper":
+                charas1.state = "hyper"  # バリア状態
+                charas1.hyper_life = 500  # 発動時間の設定
+                barrier1.empty()  # 既存のバリア1の削除
+                barrier1.add(Barrier1(charas1))  # バリア生成
+        else:
+            key_hold_time1 = 0
+
+        # w, a, s, dが同時押しされていればchara2のバリア
+        if keys[pg.K_w] and keys[pg.K_a] and keys[pg.K_s] and keys[pg.K_d]:
+            key_hold_time2 += 1
+            if key_hold_time2 >= hold_time and charas2.state != "hyper":
+                charas2.state = "hyper"  # バリア状態
+                charas2.hyper_life = 500  # 発動時間の設定
+                barrier2.empty()  # 既存のバリア2の削除
+                barrier2.add(Barrier2(charas2))  # バリア生成
+        else:
+            key_hold_time2 = 0
 
         # 座標確認用(座標を確認したいときに使ってね！)
         # line = pg.Surface((WIDTH, HEIGHT))
         # pg.draw.line(screen, (255, 0, 0), (0, 680), (WIDTH, 680), 2)
 
         charas1.update(key_lst, screen)
+        if charas1.state == "hyper":
+            for i in barrier1:
+                i.update(charas1)
+                barrier1.draw(screen)
+
         charas2.update(key_lst, screen)
+        if charas2.state == "hyper":
+            for i in barrier2:
+                i.update(charas2)
+                barrier2.draw(screen)
+
         beams1.update()
         beams1.draw(screen)
         beams2.update()
