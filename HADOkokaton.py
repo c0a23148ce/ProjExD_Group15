@@ -301,15 +301,15 @@ class Hp_bar:
         fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
         txt = fonto.render(str(self.time//50), True, (255, 0, 0))
         self.time += 1
-        if self.time < 499: #1桁の時
+        if self.time <= 500: #1桁の時
             screen.blit(txt, [WIDTH/2-5, 58])
-        elif 500 <= self.time <= 4999: #2桁の時
+        elif 500 < self.time <= 5000: #2桁の時
             screen.blit(txt, [WIDTH/2-12, 58])
-        elif 5000 <= self.time <= 49999: #3桁の時
+        elif 5000 < self.time <= 49950: #3桁の時
             screen.blit(txt, [WIDTH/2-20, 58])
         else: #上記以外の時(999以上の時)
             max = fonto.render(str(999), True, (255, 0, 0)) #999で固定
-            screen.blit(max, [WIDTH/2-28, 58])
+            screen.blit(max, [WIDTH/2-20, 58])
 
 
 class Player1_hp:
