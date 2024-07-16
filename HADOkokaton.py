@@ -284,13 +284,15 @@ class Energy:
         self.energy = 100
         self.player = player
         self.font = pg.font.Font(None, 50)
-        self.color = (0, 0, 255)
-        self.image = self.font.render(f"E: {self.energy}", 0, self.color)
-        self.rect = self.image.get_rect()
+        self.color = (0, 0, 255)  # (255, 212, 20)にしたい
+        self.image = self.font.render(f"E: {self.energy}", 0, self.color)  # Energyに変える
+        
         if self.player == 1:
-            self.rect.center = 900, HEIGHT-20
+            self.rect = self.image.get_rect(center=(WIDTH*(3/4), HEIGHT-20))
+            self.rect.center = WIDTH*(3/4)-30, HEIGHT-20
         else:
-            self.rect.center = 200, HEIGHT-20
+            self.rect = self.image.get_rect(center=(WIDTH*(1/4), HEIGHT-20))
+            self.rect.center = WIDTH*(1/4)-80, HEIGHT-20
 
     def reduce_energy(self):
         self.energy -= 10
@@ -299,7 +301,7 @@ class Energy:
         self.energy += 1
     
     def update(self, screen: pg.Surface):
-        self.image = self.font.render(f"E: {self.energy}", 0, self.color)
+        self.image = self.font.render(f"Energy: {self.energy}", 0, self.color)
         screen.blit(self.image, self.rect)
         
 
@@ -332,7 +334,7 @@ def main():
                 if energy1.energy >= 10:  # エネルギーが残っていれば
                     beams1.add(Beam_1(charas1))# ビーム発射！
                     energy1.reduce_energy()
-                    charas1.change_img(1, screen)
+                    # charas1.change_img(1, screen)  # ここ絶対に消せ
             if event.type == pg.KEYDOWN and event.key == pg.K_RCTRL:  # 左ctclを押したとき
                 P1_is_charging = True
             if event.type == pg.KEYUP and event.key == pg.K_RCTRL:  # 左ctclを離したとき
@@ -344,7 +346,7 @@ def main():
                 if energy2.energy >= 10:  # エネルギーが残っていれば
                     beams2.add(Beam_2(charas2))# ビーム発射！
                     energy2.reduce_energy()
-                    charas2.change_img(1, screen)
+                    # charas2.change_img(1, screen)  # ここ絶対に消せ
             if event.type == pg.KEYDOWN and event.key == pg.K_LCTRL:  # 左ctclを押したとき
                 P2_is_charging = True
             if event.type == pg.KEYUP and event.key == pg.K_LCTRL:  # 左ctclを離したとき
