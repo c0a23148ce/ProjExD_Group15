@@ -344,8 +344,7 @@ class Barrier2(pg.sprite.Sprite):
         chara2の動きに従ってバリアを動かす
         """
         self.rect.center = chara2.rect.center
-
-        
+     
 
 class Hp_bar:
     """
