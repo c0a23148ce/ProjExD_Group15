@@ -102,6 +102,8 @@ class Chara_1(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = xy
         self.speed = 8
+        self.state = "normal" # 状態の変数
+        self.hyper_life = -1 # 発動時間の変数
 
     def change_img(self, num: int, screen: pg.Surface):
         """
@@ -131,6 +133,11 @@ class Chara_1(pg.sprite.Sprite):
             self.dire = tuple(sum_mv)
             self.image = self.imgs[self.dire]
         screen.blit(self.image, self.rect)
+
+        if self.state == "hyper": # バリア時間の処理
+            self.hyper_life -= 1
+            if self.hyper_life < 0:
+                self.state = "normal"
 
 
 class Chara_2(pg.sprite.Sprite):
@@ -169,6 +176,8 @@ class Chara_2(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = xy
         self.speed = 8
+        self.state = "normal" # 状態の変数
+        self.hyper_life = -1 # 発動時間の変数
 
     def change_img(self, num: int, screen: pg.Surface):
         """
@@ -198,6 +207,11 @@ class Chara_2(pg.sprite.Sprite):
             self.dire = tuple(sum_mv)
             self.image = self.imgs[self.dire]
         screen.blit(self.image, self.rect)
+
+        if self.state == "hyper": # バリア時間の処理
+            self.hyper_life -= 1
+            if self.hyper_life < 0:
+                self.state = "normal"
 
 
 class Beam_1(pg.sprite.Sprite):
@@ -286,7 +300,132 @@ class Explosion(pg.sprite.Sprite):
         self.image = self.imgs[self.life//10%2]
         if self.life < 0:
             self.kill()
+            
 
+class Barrier1(pg.sprite.Sprite):
+    """
+    chara1が無敵化時のバリアを描く
+    """
+    def __init__(self, chara1: Chara_1):
+        super().__init__()
+        rad = 80
+        self.image = pg.Surface((2*rad, 2*rad))
+        color = (211, 237, 251)
+        pg.draw.circle(self.image, color, (rad, rad), rad)
+        self.image.set_alpha(150)
+        self.image.set_colorkey((0, 0, 0))
+        self.rect = self.image.get_rect()
+        self.rect.center = chara1.rect.center
+
+    def update(self,chara1: Chara_1):
+        """
+        chara1の動きに従ってバリアを動かす
+        """
+        self.rect.center = chara1.rect.center
+
+
+class Barrier2(pg.sprite.Sprite):
+    """
+    chara2が無敵化時のバリアを描く
+    """
+    def __init__(self, chara2: Chara_2):
+        super().__init__()
+        rad = 80
+        self.image = pg.Surface((2*rad, 2*rad))
+        color = (211, 237, 251)
+        pg.draw.circle(self.image, color, (rad, rad), rad)
+        self.image.set_alpha(150)
+        self.image.set_colorkey((0, 0, 0))
+        self.rect = self.image.get_rect()
+        self.rect.center = chara2.rect.center
+
+    def update(self,chara2: Chara_2):
+        """
+        chara2の動きに従ってバリアを動かす
+        """
+        self.rect.center = chara2.rect.center
+
+        
+
+class Hp_bar:
+    """
+    HPバーの表示に関するクラス
+    """
+    def __init__(self):
+        """
+        HPバー画像Surfaceを生成する
+        """
+        self.hp_rct = [WIDTH/2-525,25]
+        self.hp_img = pg.image.load(f"fig/hp2.png") #hpバー
+        self.hp_img = pg.transform.scale(self.hp_img, (1052, 100)) #hpバー画像のサイズ調整 
+        self.time = 0
+    
+    def update(self, screen: pg.Surface):
+        """
+        経過時間表示
+        引数 screen：画面Surface
+        """
+        self.black = pg.Surface((90, 27)) #hpバーの元画像も数字を消すためのsurfac
+        screen.blit(self.hp_img, self.hp_rct) #hpバー表示
+        pg.draw.rect(self.black,(0, 0, 0), (0, 0, WIDTH-599, 100)) #黒四角形を生成
+        screen.blit(self.black, [WIDTH-599, 60]) #黒四角形表示
+        fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
+        txt = fonto.render(str(self.time//50), True, (255, 0, 0))
+        self.time += 1
+        if self.time <= 500: #1桁の時
+            screen.blit(txt, [WIDTH/2-5, 58])
+        elif 500 < self.time <= 5000: #2桁の時
+            screen.blit(txt, [WIDTH/2-12, 58])
+        elif 5000 < self.time <= 49950: #3桁の時
+            screen.blit(txt, [WIDTH/2-20, 58])
+        else: #上記以外の時(999以上の時)
+            max = fonto.render(str(999), True, (255, 0, 0)) #999で固定
+            screen.blit(max, [WIDTH/2-20, 58])
+
+
+class Player1_hp:
+    """
+    プレイヤー1のHPに関するクラス
+    """
+    def __init__(self):
+        """
+        残りHPを計数
+        """
+        self.hp_value = 464  #現在のhp
+        self.hp_xy = [WIDTH-499, 65]
+
+    def update(self, screen: pg.Surface):
+        """
+        横464縦16のHPバーSurfaceを生成する
+        爆弾に当たった時にHPの四角形を更新
+        引数 screen：画面Surface
+        """
+        self.hp = pg.Surface((464, 16)) #player1のHPバーSurfaceを生成
+        pg.draw.rect(self.hp,(0, 255, 0), (0, 0, self.hp_value, 25)) #残りHPを更新
+        screen.blit(self.hp, self.hp_xy) #残りHPを表示
+
+
+class Player2_hp:
+    """
+    プレイヤー2のHPに関するクラス
+    """
+    def __init__(self):
+        """
+        被ダメージを計数
+        """
+        self.damage_value = 0  #被ダメージ
+        self.hp_xy = [40, 65] 
+
+    def update(self, screen: pg.Surface):
+        """
+        横461縦16のHPバーSurfaceを生成する
+        爆弾に当たった時にHPの四角形を更新
+        引数 screen：画面Surface
+        """
+        self.hp = pg.Surface((461, 16)) #player2のHPバーSurfaceを生成
+        pg.draw.rect(self.hp,(0, 255, 0), (self.damage_value, 0, 461, 25)) #残りHPを更新
+        screen.blit(self.hp, self.hp_xy) #残りHPを表示
+        
 
 class CPU_1(pg.sprite.Sprite):
     """
@@ -436,6 +575,196 @@ class CPU_Effect(pg.sprite.Sprite):
         screen.blit(self.image, self.rect)
         self.tmr += 1
         
+class Skill_cut_1(pg.sprite.Sprite):
+    """
+    キャラに対応したスキルを発動
+    """
+    def __init__(self, life, num, screen: pg.Surface):
+        super().__init__()
+        self.life = life
+        self.image = pg.Surface((WIDTH, HEIGHT))
+        self.rect = self.image.get_rect()
+        pg.draw.rect(self.image, (0, 0, 0), (WIDTH/2, 0, 290, 190))
+        pg.draw.polygon(self.image, (255,255,255), [[630, 220], [865, 160], [900, 165], [935, 145], [WIDTH, 110],[WIDTH,260], [1050, 250], [970, 280], [630, 295], [500,280]]) 
+        pg.draw.polygon(self.image, (0,0,255), [[630, 230], [865, 170], [900, 175], [935, 155], [WIDTH, 120],[WIDTH,240], [1050, 240], [970, 270], [630, 285], [530,275]])       
+        #pg.draw.rect(self.image, (0, 0, 0), (WIDTH/2, 0, 290, 190))
+        #pg.draw.rect(self.image, (0, 0, 255), (WIDTH/2, 0, 270, 170))
+        self.image.set_alpha(200)
+        self.image_cut = pg.transform.rotozoom(pg.image.load(f"fig/{num}.png"), 0, 5)
+        self.rect_cut = self.image_cut.get_rect()
+
+    def update(self, screen):
+        self.life -= 1
+        screen.blit(self.image_cut, (WIDTH*5/7, HEIGHT*2/9))
+        if self.life < 0:
+            self.kill()
+        if check_bound(self.rect) != (True, True):
+            self.kill()
+
+class Skill_1(pg.sprite.Sprite):
+    """
+    キャラクター１のスキルに関するクラス
+    """
+    def __init__(self, chara: Chara_1):
+        """
+        スキル画像Surfaceを生成する
+        引数 chara_1：スキルを放つキャラクター
+        """
+        super().__init__()
+        self.vx, self.vy = chara.dire
+        angle = math.degrees(math.atan2(-self.vy, self.vx))
+        self.image = pg.transform.rotozoom(pg.image.load(f"fig/beam.png"), angle, 1.5)
+        self.vx = math.cos(math.radians(angle))
+        self.vy = -math.sin(math.radians(angle))
+        self.rect = self.image.get_rect()
+        self.rect.centery = chara.rect.centery+chara.rect.height*self.vy
+        self.rect.centerx = chara.rect.centerx+chara.rect.width*self.vx
+        self.speed = 100
+
+    def update(self):
+        """
+        スキルを速度ベクトルself.vx, self.vyに基づき移動させる
+        引数 screen：画面Surface
+        """
+        self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
+        if check_bound(self.rect) != (True, True):
+            self.kill()
+
+class Skillpoint_1:
+    """
+    時間経過と共に上昇するスキルポイント
+    """
+    def __init__(self):
+        self.value = 0
+        self.gauge_img0_1 = pg.transform.rotozoom(pg.image.load(f"fig/{3}.png"), 0, 1)
+
+    def update(self):
+        if (self.value < 100):
+            self.value += 0.25
+
+    def draw_gauge(self, surface, x, y, radius_1, current_1, maximum_1):
+
+        # ゲージの背景（白で円を描画）
+        pg.draw.circle(surface, (255, 255, 255), (x, y), radius_1)
+
+        # 充填部分（青で扇形を描画）
+        angle_1 = (current_1 / maximum_1) * 360  # 充填率を角度に変換
+        start_angle_1 = 90  #90度から描画する
+        end_angle_1 = start_angle_1 + 270/360 * angle_1
+        pg.draw.arc(surface, (0, 0, 255), (x - radius_1, y - radius_1, 2 * radius_1, 2 * radius_1), math.radians(start_angle_1), math.radians(end_angle_1), width=radius_1)
+        pg.draw.circle(surface, (0, 0, 0), (x, y), radius_1/2) # 内側の円
+        pg.draw.rect(surface, (0, 0, 0), (x, y - radius_1, radius_1, radius_1)) # 形を整えるための右上の四角
+        surface.blit(self.gauge_img0_1, (x, y - radius_1))
+
+class Skill_cut_2(pg.sprite.Sprite):
+    """
+    キャラに対応したスキルを発動
+    """
+    def __init__(self, life, num, screen: pg.Surface):
+        super().__init__()
+        self.life = life
+        self.image = pg.Surface((WIDTH, HEIGHT))
+        self.rect = self.image.get_rect()
+        pg.draw.rect(self.image, (0, 0, 0), (WIDTH/2, 0, 290, 190))
+        pg.draw.polygon(self.image, (255,255,255), [[630, 220], [865, 160], [900, 165], [935, 145], [WIDTH, 110],[WIDTH,260], [1050, 250], [970, 280], [630, 295], [500,280]]) 
+        pg.draw.polygon(self.image, (0,0,255), [[630, 230], [865, 170], [900, 175], [935, 155], [WIDTH, 120],[WIDTH,240], [1050, 240], [970, 270], [630, 285], [530,275]])       
+        #pg.draw.rect(self.image, (0, 0, 0), (WIDTH/2, 0, 290, 190))
+        #pg.draw.rect(self.image, (0, 0, 255), (WIDTH/2, 0, 270, 170))
+        self.image.set_alpha(200)
+        self.image_cut = pg.transform.rotozoom(pg.image.load(f"fig/{num}.png"), 0, 5)
+        self.rect_cut = self.image_cut.get_rect()
+
+    def update(self, screen):
+        self.life -= 1
+        screen.blit(self.image_cut, (WIDTH*5/7, HEIGHT*2/9))
+        if self.life < 0:
+            self.kill()
+        if check_bound(self.rect) != (True, True):
+            self.kill()
+
+class Skill_2(pg.sprite.Sprite):
+    """
+    キャラクター１のスキルに関するクラス
+    """
+    def __init__(self, chara: Chara_2):
+        """
+        スキル画像Surfaceを生成する
+        引数 chara_2：スキルを放つキャラクター
+        """
+        super().__init__()
+        self.vx, self.vy = chara.dire
+        angle = math.degrees(math.atan2(-self.vy, self.vx))
+        self.image = pg.transform.rotozoom(pg.image.load(f"fig/beam.png"), angle, 1.5)
+        self.vx = math.cos(math.radians(angle))
+        self.vy = -math.sin(math.radians(angle))
+        self.rect = self.image.get_rect()
+        self.rect.centery = chara.rect.centery+chara.rect.height*self.vy
+        self.rect.centerx = chara.rect.centerx+chara.rect.width*self.vx
+        self.speed = 100
+
+    def update(self):
+        """
+        スキルを速度ベクトルself.vx, self.vyに基づき移動させる
+        引数 screen：画面Surface
+        """
+        self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
+        if check_bound(self.rect) != (True, True):
+            self.kill()
+
+class Skillpoint_2:
+    """
+    時間経過と共に上昇するスキルポイント
+    """
+    def __init__(self):
+        self.value = 0
+        self.gauge_img0_2 = pg.transform.rotozoom(pg.image.load(f"fig/{32}.png"), 0, 1)
+
+    def update(self):
+        if (self.value < 100):
+            self.value += 0.25
+
+    def draw_gauge(self, surface, x, y, radius_2, current_2, maximum_2):
+
+        # ゲージの背景（白で円を描画）
+        pg.draw.circle(surface, (255, 255, 255), (x, y), radius_2)
+
+        # 充填部分（青で扇形を描画）
+        angle_2 = (current_2 / maximum_2) * 360  # 充填率を角度に変換
+        start_angle_2 = 90  #90度から描画する
+        end_angle_2 = start_angle_2 + 270/360 * angle_2
+        pg.draw.arc(surface, (0, 0, 255), (x - radius_2, y - radius_2, 2 * radius_2, 2 * radius_2), math.radians(start_angle_2), math.radians(end_angle_2), width=radius_2)
+        pg.draw.circle(surface, (0, 0, 0), (x, y), radius_2/2) # 内側の円
+        pg.draw.rect(surface, (0, 0, 0), (x, y - radius_2, radius_2, radius_2)) # 形を整えるための右上の四角
+        surface.blit(self.gauge_img0_2, (x, y - radius_2))
+
+class Energy:
+    """
+    キャラクターのエネルギーに関するクラス
+    """
+    def __init__(self, player: int):
+        self.energy = 100
+        self.player = player
+        self.font = pg.font.Font(None, 50)
+        self.color = (0, 0, 255)  # (255, 212, 20)にしたい
+        self.image = self.font.render(f"E: {self.energy}", 0, self.color)  # Energyに変える
+        
+        if self.player == 1:
+            self.rect = self.image.get_rect(center=(WIDTH*(3/4), HEIGHT-20))
+            self.rect.center = WIDTH*(3/4)-30, HEIGHT-20
+        else:
+            self.rect = self.image.get_rect(center=(WIDTH*(1/4), HEIGHT-20))
+            self.rect.center = WIDTH*(1/4)-80, HEIGHT-20
+
+    def reduce_energy(self):
+        self.energy -= 10
+
+    def charge_energy(self):
+        self.energy += 1
+    
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"Energy: {self.energy}", 0, self.color)
+        screen.blit(self.image, self.rect)
+        
 
 def main():
     pg.display.set_caption("HADOU!!こうかとん!!")
@@ -443,7 +772,9 @@ def main():
     bg_img = pg.image.load(f"fig/background.jpg")
 
     charas1 = Chara_1(3, (WIDTH*3/4+20, HEIGHT/2+50))
+    energy1 = Energy(1)
     charas2 = Chara_2(32, (WIDTH/4-35, HEIGHT/2+45))
+    energy2 = Energy(2)
     beams1 = pg.sprite.Group()
     beams2 = pg.sprite.Group()
 
@@ -455,23 +786,77 @@ def main():
     exps = pg.sprite.Group()
     cpu_flag = False
 
-    tmr = 0
-    clock = pg.time.Clock()
 
     f1 = CPU_Effect((1001, 235), "blue")
     f2 = CPU_Effect((1002, 571), "blue")
     f3 = CPU_Effect((107, 236), "yellow")
     f4 = CPU_Effect((107, 570), "yellow")
+    exps = pg.sprite.Group()
+    barrier1 = pg.sprite.Group()
+    barrier2 = pg.sprite.Group()
+
+    # スキル1,2の初期設定
+    skill1 = pg.sprite.Group()
+    skill2 = pg.sprite.Group()
+    skillpoint1 = Skillpoint_1()
+    skillpoint2 = Skillpoint_2()
+    skill_gauge_value_1 = 0
+    skill_gauge_value_2 = 0
+    max_value_1 = 100
+    max_value_2 = 100
+
+
+    tmr = 0
+    P1s_flame = 1
+    P2s_flame = 1
+    P1_is_charging = False
+    P2_is_charging = False
+    clock = pg.time.Clock()
+    key_hold_time1 = 0  # chara1のバリア判定用のキー押下時間
+    key_hold_time2 = 0  # chara2のバリア判定用のキー押下時間
+    hold_time = 1  # バリアを発動するために必要なキーフレーム数
+
+    player1_hp = Player1_hp()
+    player2_hp = Player2_hp()
+    hp_bar = Hp_bar()
     while True:
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return 0
+            # プレイヤー1に関して
             if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT:
-                beams1.add(Beam_1(charas1))# ビーム発射！
-                
+                if energy1.energy >= 10:  # エネルギーが残っていれば
+                    beams1.add(Beam_1(charas1))# ビーム発射！
+                    energy1.reduce_energy()
+                    # charas1.change_img(1, screen)  # ここ絶対に消せ
+            if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT:  # 左SHIFTを押したとき
+                P1_is_charging = True
+            if event.type == pg.KEYUP and event.key == pg.K_RSHIFT:  # 左SHIFTを離したとき
+                P1_is_charging = False
+                P1s_flame = 1
+                charas1.image = charas1.imgs[(-1, 0)]
+            # プレイヤー2に関して
             if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
-                beams2.add(Beam_2(charas2))# ビーム発射！
+                if energy2.energy >= 10:  # エネルギーが残っていれば
+                    beams2.add(Beam_2(charas2))# ビーム発射！
+                    energy2.reduce_energy()
+                    # charas2.change_img(1, screen)  # ここ絶対に消せ
+            if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:  # 左SHIFTを押したとき
+                P2_is_charging = True
+            if event.type == pg.KEYUP and event.key == pg.K_LSHIFT:  # 左SHIFTを離したとき
+                P2_is_charging = False
+                P2s_flame = 1
+                charas2.image = charas2.imgs[(+1, 0)]
+
+        if P1_is_charging:  # プレイヤー1がボタンを押しているとき  
+            P1s_flame +=1
+        if P1s_flame % 4 == 0:
+            energy1.charge_energy()   # エネルギーをチャージする
+        if P2_is_charging:  # プレイヤー2がボタンを押しているとき  
+            P2s_flame +=1
+        if P2s_flame % 4 == 0:
+            energy2.charge_energy()   # エネルギーをチャージする
         screen.blit(bg_img, [0, 0])
 
         if tmr<=500:
@@ -498,59 +883,79 @@ def main():
         #  ここから当たり判定
         
         #  chara1とchara2が打ったビームの当たり判定
+        
+        # chara1とビームの当たり判定
         if len(pg.sprite.spritecollide(charas1, beams2, True)) != 0:
-            exps.add(Explosion(charas1, 100))  # 爆発エフェクト
-            charas2.change_img(62, screen)  # こうかとん喜びエフェクト
-            charas1.change_img(8, screen) # こうかとん悲しみエフェクト
-            pg.display.update()
-            time.sleep(2)
-            return
+            if charas1.state != "hyper":
+                player1_hp.hp_value -= 50 #HPを50減らす
+                exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+                if player1_hp.hp_value <= 0: #残りHPが0以下の時
+                    exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+                    charas2.change_img(62, screen)  # こうかとん喜びエフェクト
+                    charas1.change_img(8, screen) # こうかとん悲しみエフェクト
+                    hp_bar.update(screen)
+                    player1_hp.update(screen)
+                    player2_hp.update(screen)
+                    pg.display.update()
+                    time.sleep(2)
+                    return
         
         #  chara2とChara1が打ったビームの当たり判定
         if len(pg.sprite.spritecollide(charas2, beams1, True)) != 0:
-            exps.add(Explosion(charas2, 100))  # 爆発エフェクト
-            charas1.change_img(6, screen)  # こうかとん喜びエフェクト
-            charas2.change_img(82, screen) # こうかとん悲しみエフェクト
-            pg.display.update()
-            time.sleep(2)
-            return
+            if charas2.state != "hyper":
+                player2_hp.damage_value += 50 #被ダメージを50増やす
+                exps.add(Explosion(charas2, 100))  # 爆発エフェクト
+                if player2_hp.damage_value >= 461: #被ダメージがHPを超えた時
+                    exps.add(Explosion(charas2, 100))  # 爆発エフェクト
+                    charas1.change_img(6, screen)  # こうかとん喜びエフェクト
+                    charas2.change_img(82, screen) # こうかとん悲しみエフェクト
+                    hp_bar.update(screen)
+                    player1_hp.update(screen)
+                    player2_hp.update(screen)
+                    pg.display.update()
+                    time.sleep(2)
+                    return
         
         
-        #  chara2とcpu1が打ったビームの当たり判定
+        #  chara2とcpu1_aが打ったビームの当たり判定
         if len(pg.sprite.spritecollide(charas2, cpu1_beams, True)) != 0:
-            exps.add(Explosion(charas2, 100))  # 爆発エフェクト
-            charas1.change_img(6, screen)  # こうかとん喜びエフェクト
-            charas2.change_img(82, screen) # こうかとん悲しみエフェクト
-            pg.display.update()
-            time.sleep(2)
-            return
-        
-        #  chara2とcpu2が打ったビームの当たり判定
+            if charas2.state != "hyper":
+                exps.add(Explosion(charas2, 100))  # 爆発エフェクト
+                charas1.change_img(6, screen)  # こうかとん喜びエフェクト
+                charas2.change_img(82, screen) # こうかとん悲しみエフェクト
+                pg.display.update()
+                time.sleep(2)
+                return
+            
+        #  chara2とcpu1_bが打ったビームの当たり判定
         if len(pg.sprite.spritecollide(charas2, cpu1_beams, True)) != 0:
-            exps.add(Explosion(charas2, 100))  # 爆発エフェクト
-            charas1.change_img(6, screen)  # こうかとん喜びエフェクト
-            charas2.change_img(82, screen) # こうかとん悲しみエフェクト
-            pg.display.update()
-            time.sleep(2)
-            return
+            if charas2.state != "hyper":
+                exps.add(Explosion(charas2, 100))  # 爆発エフェクト
+                charas1.change_img(6, screen)  # こうかとん喜びエフェクト
+                charas2.change_img(82, screen) # こうかとん悲しみエフェクト
+                pg.display.update()
+                time.sleep(2)
+                return
         
         #  CPU2_aとchara1の当たり判定
         if len(pg.sprite.spritecollide(charas1, cpu2_beams, True)) != 0:
-            exps.add(Explosion(charas1, 100))  # 爆発エフェクト
-            charas2.change_img(62, screen)  # こうかとん喜びエフェクト
-            charas1.change_img(8, screen) # こうかとん悲しみエフェクト
-            pg.display.update()
-            time.sleep(2)
-            return  
+            if charas1.state != "hyper":
+                exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+                charas2.change_img(62, screen)  # こうかとん喜びエフェクト
+                charas1.change_img(8, screen) # こうかとん悲しみエフェクト
+                pg.display.update()
+                time.sleep(2)
+                return  
         
         #  cpu2_bとchara1の当たり判定
         if len(pg.sprite.spritecollide(charas1, cpu2_beams, True)) != 0:
-            exps.add(Explosion(charas1, 100))  # 爆発エフェクト
-            charas2.change_img(62, screen)  # こうかとん喜びエフェクト
-            charas2.change_img(8, screen) # こうかとん悲しみエフェクト
-            pg.display.update()
-            time.sleep(2)
-            return
+            if charas1.state != "hyper":
+                exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+                charas2.change_img(62, screen)  # こうかとん喜びエフェクト
+                charas2.change_img(8, screen) # こうかとん悲しみエフェクト
+                pg.display.update()
+                time.sleep(2)
+                return
         
         #  chara1とcpu2の当たり判定
         for cpu in pg.sprite.groupcollide(cpu2, beams1, True, True).keys():
@@ -568,8 +973,93 @@ def main():
         cpu1.draw(screen)
         cpu2.update()
         cpu2.draw(screen)
-        charas1.update(key_lst, screen)
+
+        # chara1の必殺技
+        if skill_gauge_value_1 == 100 and event.type == pg.KEYDOWN and event.key == pg.K_RCTRL:
+            #skill.add(Skill_1(35, 300, screen))
+            skill1.add(Skill_1(charas1))# スキル発射！
+            skill_gauge_value_1 = 0
+
+        # スキルゲージの変化
+        if skill_gauge_value_1 != max_value_1: # ゲージを増やす
+            skill_gauge_value_1 += 0.25
+
+        # chara2とchara1スキルの当たり判定
+        if len(pg.sprite.spritecollide(charas2, skill1, True)) != 0:
+            exps.add(Explosion(charas2, 100))  # 爆発エフェクト
+            charas1.change_img(6, screen)  # こうかとん喜びエフェクト
+            charas2.change_img(82, screen) # こうかとん悲しみエフェクト
+            pg.display.update()
+            time.sleep(2)
+            return
+        
+        # chara2の必殺技
+        if skill_gauge_value_2 == 100 and event.type == pg.KEYDOWN and event.key == pg.K_LCTRL:
+            #skill.add(Skill_2(35, 300, screen))
+            skill2.add(Skill_2(charas2))# スキル発射！
+            skill_gauge_value_2 = 0
+        
+        # スキルゲージの変化
+        if skill_gauge_value_2 != max_value_2: # ゲージを増やす
+            skill_gauge_value_2 += 0.25
+
+        # chara1とchara2スキルの当たり判定
+        if len(pg.sprite.spritecollide(charas1, skill2, True)) != 0:
+            exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+            charas2.change_img(8, screen)  # こうかとん喜びエフェクト
+            charas1.change_img(62, screen) # こうかとん悲しみエフェクト
+            pg.display.update()
+            time.sleep(2)
+            return
+
+        
+        keys = pg.key.get_pressed()
+        # ↑, ↓, ←, →が同時押しされていればcharas1のバリア
+        if keys[pg.K_UP] and keys[pg.K_DOWN] and keys[pg.K_LEFT] and keys[pg.K_RIGHT]:
+            key_hold_time1 += 1
+            if key_hold_time1 >= hold_time and charas1.state != "hyper":
+                charas1.state = "hyper"  # バリア状態
+                charas1.hyper_life = 500  # 発動時間の設定
+                barrier1.empty()  # 既存のバリア1の削除
+                barrier1.add(Barrier1(charas1))  # バリア生成
+        else:
+            key_hold_time1 = 0
+
+        # w, a, s, dが同時押しされていればchara2のバリア
+        if keys[pg.K_w] and keys[pg.K_a] and keys[pg.K_s] and keys[pg.K_d]:
+            key_hold_time2 += 1
+            if key_hold_time2 >= hold_time and charas2.state != "hyper":
+                charas2.state = "hyper"  # バリア状態
+                charas2.hyper_life = 500  # 発動時間の設定
+                barrier2.empty()  # 既存のバリア2の削除
+                barrier2.add(Barrier2(charas2))  # バリア生成
+        else:
+            key_hold_time2 = 0
+
+        # 座標確認用(座標を確認したいときに使ってね！)
+        # line = pg.Surface((WIDTH, HEIGHT))
+        # pg.draw.line(screen, (255, 0, 0), (0, 680), (WIDTH, 680), 2)
+
+        if P1_is_charging:
+            charas1.change_img(1, screen)
+        else:
+            charas1.update(key_lst, screen)
+        energy1.update(screen)
+        if P2_is_charging:
+            charas2.change_img(12, screen)
+        else:
+            if charas1.state == "hyper":
+                for i in barrier1:
+                    i.update(charas1)
+                    barrier1.draw(screen)
+
         charas2.update(key_lst, screen)
+        energy2.update(screen)
+        if charas2.state == "hyper":
+            for i in barrier2:
+                i.update(charas2)
+                barrier2.draw(screen)
+
         beams1.update()
         beams1.draw(screen)
         beams2.update()
@@ -580,6 +1070,15 @@ def main():
         cpu2_beams.draw(screen)
         exps.update()
         exps.draw(screen)
+        hp_bar.update(screen)
+        player1_hp.update(screen)
+        player2_hp.update(screen)
+        skillpoint1.draw_gauge(screen, WIDTH -50, 70, 50, skill_gauge_value_1, max_value_1)
+        skill1.update()
+        skill1.draw(screen)
+        skillpoint2.draw_gauge(screen, 50, 70, 50, skill_gauge_value_2, max_value_2)
+        skill2.update()
+        skill2.draw(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
