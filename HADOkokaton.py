@@ -344,7 +344,7 @@ def main():
                 if energy2.energy >= 10:  # エネルギーが残っていれば
                     beams2.add(Beam_2(charas2))# ビーム発射！
                     energy2.reduce_energy()
-                    charas2.change_img(12, screen)
+                    charas2.change_img(1, screen)
             if event.type == pg.KEYDOWN and event.key == pg.K_LCTRL:  # 左ctclを押したとき
                 P2_is_charging = True
             if event.type == pg.KEYUP and event.key == pg.K_LCTRL:  # 左ctclを離したとき
