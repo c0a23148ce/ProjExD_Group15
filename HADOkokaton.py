@@ -290,7 +290,7 @@ class Energy:
         if self.player == 1:
             self.rect.center = 900, HEIGHT-20
         else:
-            self.rect.center = 100, HEIGHT-20
+            self.rect.center = 200, HEIGHT-20
 
     def reduce_energy(self):
         self.energy -= 10
@@ -327,26 +327,39 @@ def main():
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return 0
+            # プレイヤー1に関して
             if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT:
                 if energy1.energy >= 10:  # エネルギーが残っていれば
                     beams1.add(Beam_1(charas1))# ビーム発射！
                     energy1.reduce_energy()
                     charas1.change_img(1, screen)
-            if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
-                if energy2.energy >= 10:  # エネルギーが残っていれば
-                    beams2.add(Beam_2(charas2))# ビーム発射！
-                    energy2.reduce_energy()
             if event.type == pg.KEYDOWN and event.key == pg.K_RCTRL:  # 左ctclを押したとき
                 P1_is_charging = True
             if event.type == pg.KEYUP and event.key == pg.K_RCTRL:  # 左ctclを離したとき
                 P1_is_charging = False
                 P1s_flame = 1
                 charas1.image = charas1.imgs[(-1, 0)]
+            # プレイヤー2に関して
+            if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
+                if energy2.energy >= 10:  # エネルギーが残っていれば
+                    beams2.add(Beam_2(charas2))# ビーム発射！
+                    energy2.reduce_energy()
+                    charas2.change_img(12, screen)
+            if event.type == pg.KEYDOWN and event.key == pg.K_LCTRL:  # 左ctclを押したとき
+                P2_is_charging = True
+            if event.type == pg.KEYUP and event.key == pg.K_LCTRL:  # 左ctclを離したとき
+                P2_is_charging = False
+                P2s_flame = 1
+                charas2.image = charas2.imgs[(+1, 0)]
 
-        if P1_is_charging:  # P1がボタンを押しているとき  
+        if P1_is_charging:  # プレイヤー1がボタンを押しているとき  
             P1s_flame +=1
         if P1s_flame % 4 == 0:
             energy1.charge_energy()   # エネルギーをチャージする
+        if P2_is_charging:  # プレイヤー2がボタンを押しているとき  
+            P2s_flame +=1
+        if P2s_flame % 4 == 0:
+            energy2.charge_energy()   # エネルギーをチャージする
         screen.blit(bg_img, [0, 0])
         
         # chara1とビームの当たり判定
@@ -376,7 +389,11 @@ def main():
         else:
             charas1.update(key_lst, screen)
         energy1.update(screen)
-        charas2.update(key_lst, screen)
+        if P2_is_charging:
+            charas2.change_img(12, screen)
+        else:
+            charas2.update(key_lst, screen)
+        energy2.update(screen)
         beams1.update()
         beams1.draw(screen)
         beams2.update()
