@@ -737,13 +737,44 @@ class Skillpoint_2:
         pg.draw.rect(surface, (0, 0, 0), (x, y - radius_2, radius_2, radius_2)) # 形を整えるための右上の四角
         surface.blit(self.gauge_img0_2, (x, y - radius_2))
 
+class Energy:
+    """
+    キャラクターのエネルギーに関するクラス
+    """
+    def __init__(self, player: int):
+        self.energy = 100
+        self.player = player
+        self.font = pg.font.Font(None, 50)
+        self.color = (0, 0, 255)  # (255, 212, 20)にしたい
+        self.image = self.font.render(f"E: {self.energy}", 0, self.color)  # Energyに変える
+        
+        if self.player == 1:
+            self.rect = self.image.get_rect(center=(WIDTH*(3/4), HEIGHT-20))
+            self.rect.center = WIDTH*(3/4)-30, HEIGHT-20
+        else:
+            self.rect = self.image.get_rect(center=(WIDTH*(1/4), HEIGHT-20))
+            self.rect.center = WIDTH*(1/4)-80, HEIGHT-20
+
+    def reduce_energy(self):
+        self.energy -= 10
+
+    def charge_energy(self):
+        self.energy += 1
+    
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"Energy: {self.energy}", 0, self.color)
+        screen.blit(self.image, self.rect)
+        
+
 def main():
     pg.display.set_caption("HADOU!!こうかとん!!")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/background.jpg")
 
     charas1 = Chara_1(3, (WIDTH*3/4+20, HEIGHT/2+50))
+    energy1 = Energy(1)
     charas2 = Chara_2(32, (WIDTH/4-35, HEIGHT/2+45))
+    energy2 = Energy(2)
     beams1 = pg.sprite.Group()
     beams2 = pg.sprite.Group()
 
@@ -776,6 +807,10 @@ def main():
 
 
     tmr = 0
+    P1s_flame = 1
+    P2s_flame = 1
+    P1_is_charging = False
+    P2_is_charging = False
     clock = pg.time.Clock()
     key_hold_time1 = 0  # chara1のバリア判定用のキー押下時間
     key_hold_time2 = 0  # chara2のバリア判定用のキー押下時間
@@ -789,11 +824,39 @@ def main():
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return 0
+            # プレイヤー1に関して
             if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT:
-                beams1.add(Beam_1(charas1))# ビーム発射！
-
+                if energy1.energy >= 10:  # エネルギーが残っていれば
+                    beams1.add(Beam_1(charas1))# ビーム発射！
+                    energy1.reduce_energy()
+                    # charas1.change_img(1, screen)  # ここ絶対に消せ
+            if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT:  # 左SHIFTを押したとき
+                P1_is_charging = True
+            if event.type == pg.KEYUP and event.key == pg.K_RSHIFT:  # 左SHIFTを離したとき
+                P1_is_charging = False
+                P1s_flame = 1
+                charas1.image = charas1.imgs[(-1, 0)]
+            # プレイヤー2に関して
             if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
-                beams2.add(Beam_2(charas2))# ビーム発射！
+                if energy2.energy >= 10:  # エネルギーが残っていれば
+                    beams2.add(Beam_2(charas2))# ビーム発射！
+                    energy2.reduce_energy()
+                    # charas2.change_img(1, screen)  # ここ絶対に消せ
+            if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:  # 左SHIFTを押したとき
+                P2_is_charging = True
+            if event.type == pg.KEYUP and event.key == pg.K_LSHIFT:  # 左SHIFTを離したとき
+                P2_is_charging = False
+                P2s_flame = 1
+                charas2.image = charas2.imgs[(+1, 0)]
+
+        if P1_is_charging:  # プレイヤー1がボタンを押しているとき  
+            P1s_flame +=1
+        if P1s_flame % 4 == 0:
+            energy1.charge_energy()   # エネルギーをチャージする
+        if P2_is_charging:  # プレイヤー2がボタンを押しているとき  
+            P2s_flame +=1
+        if P2s_flame % 4 == 0:
+            energy2.charge_energy()   # エネルギーをチャージする
         screen.blit(bg_img, [0, 0])
 
         if tmr<=500:
@@ -977,13 +1040,21 @@ def main():
         # line = pg.Surface((WIDTH, HEIGHT))
         # pg.draw.line(screen, (255, 0, 0), (0, 680), (WIDTH, 680), 2)
 
-        charas1.update(key_lst, screen)
-        if charas1.state == "hyper":
-            for i in barrier1:
-                i.update(charas1)
-                barrier1.draw(screen)
+        if P1_is_charging:
+            charas1.change_img(1, screen)
+        else:
+            charas1.update(key_lst, screen)
+        energy1.update(screen)
+        if P2_is_charging:
+            charas2.change_img(12, screen)
+        else:
+            if charas1.state == "hyper":
+                for i in barrier1:
+                    i.update(charas1)
+                    barrier1.draw(screen)
 
         charas2.update(key_lst, screen)
+        energy2.update(screen)
         if charas2.state == "hyper":
             for i in barrier2:
                 i.update(charas2)
