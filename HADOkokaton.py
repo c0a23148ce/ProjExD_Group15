@@ -1158,7 +1158,6 @@ def main():
                 fin2_sound.play()
                 time.sleep(5)
                 fin2_sound.fadeout(4)
-                
                 return
 
 
@@ -1185,16 +1184,6 @@ def main():
                 barrier2.add(Barrier2(charas2))  # バリア生成
         else:
             key_hold_time2 = 0
-
-        if charas1.state == "hyper":
-                for i in barrier1:
-                    i.update(charas1)
-                    barrier1.draw(screen)
-
-        if charas2.state == "hyper":
-            for i in barrier2:
-                i.update(charas2)
-                barrier2.draw(screen)
 
 
         #  アップデート
