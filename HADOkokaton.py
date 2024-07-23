@@ -888,8 +888,9 @@ def main():
             f3.update(screen)
             f4.update(screen)
 
-        if hp_bar.time <= 0:
+        if hp_bar.time == 0:
             bell_sound.play()
+        if hp_bar.time <= 0:
             screen.blit(bg_img_sadn, [0, 0])
             if player1_hp.hp_value > 375 - player2_hp.damage_value:
                 exps.add(Explosion(charas2, 100))  # 爆発エフェクト
@@ -942,8 +943,9 @@ def main():
                     cpu2_beams.add(Beam_CPU2(cpu, charas1))
                     beam_sound.play()  # ビームサウンド
 
-
-        #  ここから当たり判定
+        """
+        ここから当たり判定
+        """
         
         #  chara1とchara2が打ったビームの当たり判定
         if len(pg.sprite.spritecollide(charas1, beams2, True)) != 0:
@@ -964,7 +966,7 @@ def main():
                     time.sleep(5)
                     fin2_sound.fadeout(4)
                     return
-            exps.add(Explosion(charas1, 50))  # 爆発エフェクト
+                exps.add(Explosion(charas1, 50))  # 爆発エフェクト
             damage_sound.play()  #  爆発サウンド
         
         #  chara2とChara1が打ったビームの当たり判定
@@ -985,7 +987,7 @@ def main():
                     time.sleep(5)
                     fin1_sound.fadeout(4)
                     return
-            exps.add(Explosion(charas2, 50))  # 爆発エフェクト
+                exps.add(Explosion(charas2, 50))  # 爆発エフェクト
             damage_sound.play()  #  爆発サウンド
         
         #  chara2とcpu1_aが打ったビームの当たり判定
@@ -1006,7 +1008,7 @@ def main():
                     time.sleep(5)
                     fin1_sound.fadeout(4)
                     return
-            exps.add(Explosion(charas2, 50))  # 爆発エフェクト
+                exps.add(Explosion(charas2, 50))  # 爆発エフェクト
             damage_sound.play()  #  爆発サウンド
             
         #  chara2とcpu1_bが打ったビームの当たり判定
@@ -1027,7 +1029,7 @@ def main():
                     time.sleep(5)
                     fin1_sound.fadeout(4)
                     return
-            exps.add(Explosion(charas2, 50))  # 爆発エフェクト
+                exps.add(Explosion(charas2, 50))  # 爆発エフェクト
             damage_sound.play()  #  爆発サウンド
         
         #  CPU2_aとchara1の当たり判定
@@ -1048,7 +1050,7 @@ def main():
                     time.sleep(5)
                     fin2_sound.fadeout(4)
                     return 
-            exps.add(Explosion(charas1, 50))  # 爆発エフェクト
+                exps.add(Explosion(charas1, 50))  # 爆発エフェクト
             damage_sound.play()  #  爆発サウンド
         
         #  cpu2_bとchara1の当たり判定
@@ -1069,7 +1071,7 @@ def main():
                     time.sleep(5)
                     fin2_sound.fadeout(4)
                     return
-            exps.add(Explosion(charas1, 50))  # 爆発エフェクト
+                exps.add(Explosion(charas1, 50))  # 爆発エフェクト
             damage_sound.play()  #  爆発サウンド
         
         #  chara1とcpu2の当たり判定
