@@ -367,7 +367,7 @@ class Hp_bar:
         self.hp_rct = [WIDTH/2-425,25]
         self.hp_img = pg.image.load(f"fig/hp2.png") #hpバー
         self.hp_img = pg.transform.scale(self.hp_img, (852, 100)) #hpバー画像のサイズ調整 
-        self.time = 300
+        self.time = 4549
     
     def update(self, screen: pg.Surface):
         """
@@ -890,9 +890,11 @@ def main():
 
         if hp_bar.time == 0:
             bell_sound.play()
+            hp1 = player1_hp.hp_value
+            hp2 = 375 - player2_hp.damage_value
         if hp_bar.time <= 0:
             screen.blit(bg_img_sadn, [0, 0])
-            if len(pg.sprite.spritecollide(charas2, beams1, True)) != 0:
+            if hp2 > 375 - player2_hp.damage_value:
                 exps.add(Explosion(charas2, 100))  # 爆発エフェクト
                 charas1.change_img(6, screen)  # こうかとん喜びエフェクト
                 charas2.change_img(82, screen) # こうかとん悲しみエフェクト
@@ -906,7 +908,7 @@ def main():
                 time.sleep(5)
                 fin2_sound.fadeout(4)
                 return
-            if len(pg.sprite.spritecollide(charas1, beams2, True)) != 0:
+            if player1_hp.hp_value < hp1:
                 exps.add(Explosion(charas1, 100))  # 爆発エフェクト
                 charas2.change_img(62, screen)  # こうかとん喜びエフェクト
                 charas1.change_img(8, screen) # こうかとん悲しみエフェクト
