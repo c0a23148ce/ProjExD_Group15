@@ -899,8 +899,12 @@ def main():
                 hp_bar.update(screen)
                 player1_hp.update(screen)
                 player2_hp.update(screen)
+                p1_win.update()
                 pg.display.update()
-                time.sleep(2)
+                pg.mixer.music.stop()
+                fin2_sound.play()
+                time.sleep(5)
+                fin2_sound.fadeout(4)
                 return
             elif player1_hp.hp_value < 375 - player2_hp.damage_value:
                 exps.add(Explosion(charas1, 100))  # 爆発エフェクト
@@ -909,8 +913,12 @@ def main():
                 hp_bar.update(screen)
                 player1_hp.update(screen)
                 player2_hp.update(screen)
+                p2_win.update()
                 pg.display.update()
-                time.sleep(2)
+                pg.mixer.music.stop()
+                fin2_sound.play()
+                time.sleep(5)
+                fin2_sound.fadeout(4)
                 return
             # else:
             #     fonto = pg.font.Font(None, 80)
