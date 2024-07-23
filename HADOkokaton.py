@@ -367,7 +367,7 @@ class Hp_bar:
         self.hp_rct = [WIDTH/2-425,25]
         self.hp_img = pg.image.load(f"fig/hp2.png") #hpバー
         self.hp_img = pg.transform.scale(self.hp_img, (852, 100)) #hpバー画像のサイズ調整 
-        self.time = 4549
+        self.time = 300
     
     def update(self, screen: pg.Surface):
         """
@@ -720,7 +720,7 @@ class Energy:
 
     def charge_energy(self):
         if self.energy < 100:
-            self.energy += 10
+            self.energy += 20
 
     def draw_bar(self, screen, player:int):
         # スキルゲージの長さを計算
@@ -892,7 +892,7 @@ def main():
             bell_sound.play()
         if hp_bar.time <= 0:
             screen.blit(bg_img_sadn, [0, 0])
-            if player1_hp.hp_value > 375 - player2_hp.damage_value:
+            if len(pg.sprite.spritecollide(charas2, beams1, True)) != 0:
                 exps.add(Explosion(charas2, 100))  # 爆発エフェクト
                 charas1.change_img(6, screen)  # こうかとん喜びエフェクト
                 charas2.change_img(82, screen) # こうかとん悲しみエフェクト
@@ -906,7 +906,7 @@ def main():
                 time.sleep(5)
                 fin2_sound.fadeout(4)
                 return
-            elif player1_hp.hp_value < 375 - player2_hp.damage_value:
+            if len(pg.sprite.spritecollide(charas1, beams2, True)) != 0:
                 exps.add(Explosion(charas1, 100))  # 爆発エフェクト
                 charas2.change_img(62, screen)  # こうかとん喜びエフェクト
                 charas1.change_img(8, screen) # こうかとん悲しみエフェクト
