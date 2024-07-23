@@ -65,6 +65,16 @@ def calc_orientation(org: pg.Rect, dst: pg.Rect) -> tuple[float, float]:
     return x_diff/norm, y_diff/norm
 
 
+def sound_effect(sound: str, num: int):
+    """
+    効果音の設定
+    引数:soundはファイルの名前
+         numは音量
+    """
+    play_sound = pg.mixer.Sound(f"sound/{sound}.mp3")
+    play_sound.set_volume(num)
+    return play_sound
+
 class Chara_1(pg.sprite.Sprite):
     """
     ゲームキャラクター（こうかとん）に関するクラス
@@ -574,6 +584,7 @@ class CPU_Effect(pg.sprite.Sprite):
         screen.blit(self.image, self.rect)
         self.tmr += 1
         
+
 class Skill_cut_1(pg.sprite.Sprite):
     """
     キャラに対応したスキルを発動
@@ -599,6 +610,7 @@ class Skill_cut_1(pg.sprite.Sprite):
             self.kill()
         if check_bound(self.rect) != (True, True):
             self.kill()
+
 
 class Skill_1(pg.sprite.Sprite):
     """
@@ -629,6 +641,7 @@ class Skill_1(pg.sprite.Sprite):
         if check_bound(self.rect) != (True, True):
             self.kill()
 
+
 class Skillpoint_1:
     """
     時間経過と共に上昇するスキルポイント
@@ -655,6 +668,7 @@ class Skillpoint_1:
         pg.draw.rect(surface, (0, 0, 0), (x, y - radius_1, radius_1, radius_1)) # 形を整えるための右上の四角
         surface.blit(self.gauge_img0_1, (x, y - radius_1))
 
+
 class Skill_cut_2(pg.sprite.Sprite):
     """
     キャラに対応したスキルを発動
@@ -680,6 +694,7 @@ class Skill_cut_2(pg.sprite.Sprite):
             self.kill()
         if check_bound(self.rect) != (True, True):
             self.kill()
+
 
 class Skill_2(pg.sprite.Sprite):
     """
@@ -710,6 +725,7 @@ class Skill_2(pg.sprite.Sprite):
         if check_bound(self.rect) != (True, True):
             self.kill()
 
+
 class Skillpoint_2:
     """
     時間経過と共に上昇するスキルポイント
@@ -736,6 +752,7 @@ class Skillpoint_2:
         pg.draw.rect(surface, (0, 0, 0), (x, y - radius_2, radius_2, radius_2)) # 形を整えるための右上の四角
         surface.blit(self.gauge_img0_2, (x, y - radius_2))
 
+
 class Energy:
     """
     キャラクターのエネルギーに関するクラス
@@ -746,7 +763,7 @@ class Energy:
         
         if self.player == 1:
             self.WIDTH = WIDTH - 500
-        if self.player == 2:
+        else:
             self.WIDTH = 100
 
     def reduce_energy(self):
@@ -772,12 +789,48 @@ class Energy:
             pg.draw.rect(screen, (255, 255, 255), (self.WIDTH + i * segment_width, 90, segment_width, bar_height), 2)
 
         
+        
+class Finish:
+    """
+    ゲーム終了画面
+    """
+
+    def __init__(self, num:int, screen:pg.Surface):
+        self.num = num
+        self.base = pg.Surface((WIDTH, HEIGHT), flags = pg.SRCALPHA)
+        self.base.fill((0, 0, 0, 135))
+        self.screen = screen
+    
+    def update(self):
+        self.screen.blit(self.base, (0, 0))
+        fonto = pg.font.Font(None, 100)
+        txt = fonto.render(f"Player{self.num} WIN", True, (255, 255, 255))
+        self.screen.blit(txt, [WIDTH/2-200, HEIGHT/2-30])
+        fonto2 = pg.font.Font(None, 50)
+        txt1 = fonto2.render(f"Thank you for playing!", True, (255, 255, 255))
+        self.screen.blit(txt1, [WIDTH/2-180, HEIGHT/2+70])
+        
+
+
 
 def main():
     pg.display.set_caption("HADOU!!こうかとん!!")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/background.jpg")
 
+    #  BGMの再生
+    bgm = pg.mixer.music.load("sound/BGM.mp3")
+    pg.mixer.music.set_volume(0.8)
+    pg.mixer.music.play(-1)
+
+    #  サウンドの設定
+    beam_sound = sound_effect("beam", 0.4)
+    damage_sound = sound_effect("damage", 0.6)
+    magic_sound = sound_effect("magic", 0.2)
+    blow_sound = sound_effect("deathblow", 1.0)
+    fin1_sound = sound_effect("Fin1", 0.8)  # プレイヤー１が勝ったとき
+    fin2_sound = sound_effect("Fin2", 0.7)  # プレイヤー２が勝ったとき
+    
     charas1 = Chara_1(3, (WIDTH*3/4+20, HEIGHT/2+50))
     energy1 = Energy(1)
     charas2 = Chara_2(32, (WIDTH/4-35, HEIGHT/2+45))
@@ -793,11 +846,16 @@ def main():
     exps = pg.sprite.Group()
     cpu_flag = False
 
-
+    # 魔法陣エフェクトの設定
     f1 = CPU_Effect((1001, 235), "blue")
     f2 = CPU_Effect((1002, 571), "blue")
     f3 = CPU_Effect((107, 236), "yellow")
     f4 = CPU_Effect((107, 570), "yellow")
+
+    # ゲーム終了画面
+    p1_win = Finish(1, screen)
+    p2_win = Finish(2, screen) 
+
     exps = pg.sprite.Group()
     barrier1 = pg.sprite.Group()
     barrier2 = pg.sprite.Group()
@@ -831,24 +889,27 @@ def main():
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return 0
-            # プレイヤー1に関して
+            # プレイヤー1
             if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT:
                 if energy1.energy >= 20:  # エネルギーが残っていれば
                     beams1.add(Beam_1(charas1))# ビーム発射！
-                    energy1.reduce_energy()
-                    # charas1.change_img(1, screen)  # ここ絶対に消せ
+                    energy1.reduce_energy()  # ビームサウンド
+                    beam_sound.play()
+
             if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT:  # 左SHIFTを押したとき
                 P1_is_charging = True
             if event.type == pg.KEYUP and event.key == pg.K_RSHIFT:  # 左SHIFTを離したとき
                 P1_is_charging = False
+       
                 P1s_flame = 1
                 charas1.image = charas1.imgs[(-1, 0)]
-            # プレイヤー2に関して
+
+            # プレイヤー2
             if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
                 if energy2.energy >= 20:  # エネルギーが残っていれば
                     beams2.add(Beam_2(charas2))# ビーム発射！
                     energy2.reduce_energy()
-                    # charas2.change_img(1, screen)  # ここ絶対に消せ
+                    beam_sound.play()  # ビームサウンド
             if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:  # 左SHIFTを押したとき
                 P2_is_charging = True
             if event.type == pg.KEYUP and event.key == pg.K_LSHIFT:  # 左SHIFTを離したとき
@@ -866,12 +927,17 @@ def main():
             energy2.charge_energy()   # エネルギーをチャージする
         screen.blit(bg_img, [0, 0])
 
+
+        #  魔法陣の描画
+        if tmr == 40:
+            magic_sound.play()
         if tmr<=500:
             f1.update(screen)
             f2.update(screen)
             f3.update(screen)
             f4.update(screen)
     
+        #  スライムたちの描画
         if tmr>= 100 and cpu_flag == False:
             cpu1.add(CPU_1((1005, 240)))
             cpu1.add(CPU_1((1005, 600)))
@@ -879,12 +945,15 @@ def main():
             cpu2.add(CPU_2((105, 600)))
             cpu_flag= True
 
+        #  スライムたちのビーム！
         if cpu_flag == True:
             if tmr%250 == 0:  #  250フレームに1回、ビームを発射
                 for cpu in cpu1:
                     cpu1_beams.add(Beam_CPU1(cpu, charas2))
+                    beam_sound.play()  # ビームサウンド
                 for cpu in cpu2:
                     cpu2_beams.add(Beam_CPU2(cpu, charas1))
+                    beam_sound.play()  # ビームサウンド
 
 
         #  ここから当たり判定
@@ -894,33 +963,43 @@ def main():
             if charas1.state != "hyper":
                 player1_hp.hp_value -= 50 #HPを50減らす
                 if player1_hp.hp_value <= 0: #残りHPが0以下の時
-                    exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+                    exps.add(Explosion(charas1, 50))  # 爆発エフェクト
+                    damage_sound.play()  #  爆発サウンド
                     charas2.change_img(62, screen)  # こうかとん喜びエフェクト
                     charas1.change_img(8, screen) # こうかとん悲しみエフェクト
                     hp_bar.update(screen)
                     player1_hp.update(screen)
                     player2_hp.update(screen)
+                    p2_win.update()
                     pg.display.update()
-                    time.sleep(2)
+                    pg.mixer.music.stop()
+                    fin2_sound.play()
+                    time.sleep(5)
+                    fin2_sound.fadeout(4)
                     return
-            exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+            exps.add(Explosion(charas1, 50))  # 爆発エフェクト
+            damage_sound.play()  #  爆発サウンド
         
         #  chara2とChara1が打ったビームの当たり判定
         if len(pg.sprite.spritecollide(charas2, beams1, True)) != 0:
             if charas2.state != "hyper":
                 player2_hp.damage_value += 50 #被ダメージを50増やす
                 if player2_hp.damage_value >= 373: #被ダメージがHPを超えた時
-                    exps.add(Explosion(charas2, 100))  # 爆発エフェクト
+                    exps.add(Explosion(charas2, 50))  # 爆発エフェクト
                     charas1.change_img(6, screen)  # こうかとん喜びエフェクト
                     charas2.change_img(82, screen) # こうかとん悲しみエフェクト
                     hp_bar.update(screen)
                     player1_hp.update(screen)
                     player2_hp.update(screen)
+                    p1_win.update()
                     pg.display.update()
-                    time.sleep(2)
+                    pg.mixer.music.stop()
+                    fin1_sound.play()
+                    time.sleep(5)
+                    fin1_sound.fadeout(4)
                     return
-            exps.add(Explosion(charas2, 100))  # 爆発エフェクト
-        
+            exps.add(Explosion(charas2, 50))  # 爆発エフェクト
+            damage_sound.play()  #  爆発サウンド
         
         #  chara2とcpu1_aが打ったビームの当たり判定
         if len(pg.sprite.spritecollide(charas2, cpu1_beams, True)) != 0:
@@ -933,10 +1012,15 @@ def main():
                     hp_bar.update(screen)
                     player1_hp.update(screen)
                     player2_hp.update(screen)
+                    p1_win.update()
                     pg.display.update()
-                    time.sleep(2)
+                    pg.mixer.music.stop()
+                    fin1_sound.play()
+                    time.sleep(5)
+                    fin1_sound.fadeout(4)
                     return
-            exps.add(Explosion(charas2, 100))  # 爆発エフェクト
+            exps.add(Explosion(charas2, 50))  # 爆発エフェクト
+            damage_sound.play()  #  爆発サウンド
             
         #  chara2とcpu1_bが打ったビームの当たり判定
         if len(pg.sprite.spritecollide(charas2, cpu1_beams, True)) != 0:
@@ -949,10 +1033,15 @@ def main():
                     hp_bar.update(screen)
                     player1_hp.update(screen)
                     player2_hp.update(screen)
+                    p1_win.update()
                     pg.display.update()
-                    time.sleep(2)
+                    pg.mixer.music.stop()
+                    fin1_sound.play()
+                    time.sleep(5)
+                    fin1_sound.fadeout(4)
                     return
-            exps.add(Explosion(charas2, 100))  # 爆発エフェクト
+            exps.add(Explosion(charas2, 50))  # 爆発エフェクト
+            damage_sound.play()  #  爆発サウンド
         
         #  CPU2_aとchara1の当たり判定
         if len(pg.sprite.spritecollide(charas1, cpu2_beams, True)) != 0:
@@ -965,10 +1054,15 @@ def main():
                     hp_bar.update(screen)
                     player1_hp.update(screen)
                     player2_hp.update(screen)
+                    p2_win.update()
                     pg.display.update()
-                    time.sleep(2)
+                    pg.mixer.music.stop()
+                    fin2_sound.play()
+                    time.sleep(5)
+                    fin2_sound.fadeout(4)
                     return 
-            exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+            exps.add(Explosion(charas1, 50))  # 爆発エフェクト
+            damage_sound.play()  #  爆発サウンド
         
         #  cpu2_bとchara1の当たり判定
         if len(pg.sprite.spritecollide(charas1, cpu2_beams, True)) != 0:
@@ -981,32 +1075,32 @@ def main():
                     hp_bar.update(screen)
                     player1_hp.update(screen)
                     player2_hp.update(screen)
+                    p2_win.update()
                     pg.display.update()
-                    time.sleep(2)
+                    pg.mixer.music.stop()
+                    fin2_sound.play()
+                    time.sleep(5)
+                    fin2_sound.fadeout(4)
                     return
-            exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+            exps.add(Explosion(charas1, 50))  # 爆発エフェクト
+            damage_sound.play()  #  爆発サウンド
         
         #  chara1とcpu2の当たり判定
         for cpu in pg.sprite.groupcollide(cpu2, beams1, True, True).keys():
             exps.add(Explosion(cpu, 50))  # 爆発エフェクト
+            damage_sound.play()  #  爆発サウンド
             charas1.change_img(6, screen)  # こうかとん喜びエフェクト
         
         #  chara2とcpu1の当たり判定
         for cpu in pg.sprite.groupcollide(cpu1, beams2, True, True).keys():
             exps.add(Explosion(cpu, 50))  # 爆発エフェクト
+            damage_sound.play()  #  爆発サウンド
             charas2.change_img(62, screen)  # こうかとん喜びエフェクト
-
-    
-
-        cpu1.update()
-        cpu1.draw(screen)
-        cpu2.update()
-        cpu2.draw(screen)
 
         # chara1の必殺技
         if skill_gauge_value_1 == 100 and event.type == pg.KEYDOWN and event.key == pg.K_RCTRL:
-            #skill.add(Skill_1(35, 300, screen))
             skill1.add(Skill_1(charas1))# スキル発射！
+            blow_sound.play()  # 必殺技サウンド
             skill_gauge_value_1 = 0
 
         # スキルゲージの変化
@@ -1016,22 +1110,29 @@ def main():
         # chara2とchara1スキルの当たり判定
         if len(pg.sprite.spritecollide(charas2, skill1, True)) != 0:
             player2_hp.damage_value += 50 #被ダメージを50増やす
-            exps.add(Explosion(charas2, 100))  # 爆発エフェクト
+            exps.add(Explosion(charas2, 50))  # 爆発エフェクト
+            damage_sound.play()  #  爆発サウンド
             if player2_hp.damage_value >= 373: #被ダメージがHPを超えた時
-                exps.add(Explosion(charas2, 100))  # 爆発エフェクト
+                exps.add(Explosion(charas2, 50))  # 爆発エフェクト
+                damage_sound.play()  #  爆発サウンド
                 charas1.change_img(6, screen)  # こうかとん喜びエフェクト
                 charas2.change_img(82, screen) # こうかとん悲しみエフェクト
                 hp_bar.update(screen)
                 player1_hp.update(screen)
                 player2_hp.update(screen)
+                p1_win.update()
                 pg.display.update()
-                time.sleep(2)
+                pg.mixer.music.stop()
+                fin1_sound.play()
+                time.sleep(5)
+                fin1_sound.fadeout(4)
                 return
         
         # chara2の必殺技
         if skill_gauge_value_2 == 100 and event.type == pg.KEYDOWN and event.key == pg.K_LCTRL:
             #skill.add(Skill_2(35, 300, screen))
             skill2.add(Skill_2(charas2))# スキル発射！
+            blow_sound.play()  # 必殺技サウンド
             skill_gauge_value_2 = 0
         
         # スキルゲージの変化
@@ -1041,19 +1142,27 @@ def main():
         # chara1とchara2スキルの当たり判定
         if len(pg.sprite.spritecollide(charas1, skill2, True)) != 0:
             player1_hp.hp_value -= 50 #HPを50減らす
-            exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+            exps.add(Explosion(charas1, 50))  # 爆発エフェクト
+            damage_sound.play()  #  爆発サウンド
             if player1_hp.hp_value <= 0: #残りHPが0以下の時
-                exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+                exps.add(Explosion(charas1, 50))  # 爆発エフェクト
+                damage_sound.play()  #  爆発サウンド
                 charas2.change_img(62, screen)  # こうかとん喜びエフェクト
                 charas1.change_img(8, screen) # こうかとん悲しみエフェクト
                 hp_bar.update(screen)
                 player1_hp.update(screen)
                 player2_hp.update(screen)
+                p2_win.update()
                 pg.display.update()
-                time.sleep(2)
+                pg.mixer.music.stop()
+                fin2_sound.play()
+                time.sleep(5)
+                fin2_sound.fadeout(4)
+                
                 return
 
-        
+
+        #  バリアの設定
         keys = pg.key.get_pressed()
         # ↑, ↓, ←, →が同時押しされていればcharas1のバリア
         if keys[pg.K_UP] and keys[pg.K_DOWN] and keys[pg.K_LEFT] and keys[pg.K_RIGHT]:
@@ -1077,23 +1186,37 @@ def main():
         else:
             key_hold_time2 = 0
 
-        # 座標確認用(座標を確認したいときに使ってね！)
-        # line = pg.Surface((WIDTH, HEIGHT))
-        # pg.draw.line(screen, (255, 0, 0), (0, 680), (WIDTH, 680), 2)
+        if charas1.state == "hyper":
+                for i in barrier1:
+                    i.update(charas1)
+                    barrier1.draw(screen)
+
+        if charas2.state == "hyper":
+            for i in barrier2:
+                i.update(charas2)
+                barrier2.draw(screen)
+
+
+        #  アップデート
+        cpu1.update()
+        cpu1.draw(screen)
+        cpu2.update()
+        cpu2.draw(screen)
 
         if P1_is_charging:
             charas1.change_img(1, screen)
         else:
             charas1.update(key_lst, screen)
+
         if P2_is_charging:
             charas2.change_img(12, screen)
         else:
-            if charas1.state == "hyper":
-                for i in barrier1:
-                    i.update(charas1)
-                    barrier1.draw(screen)
+            charas2.update(key_lst, screen)
 
-        charas2.update(key_lst, screen)
+        if charas1.state == "hyper":
+            for i in barrier1:
+                i.update(charas1)
+                barrier1.draw(screen)
         if charas2.state == "hyper":
             for i in barrier2:
                 i.update(charas2)
