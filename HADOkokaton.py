@@ -367,7 +367,7 @@ class Hp_bar:
         self.hp_rct = [WIDTH/2-425,25]
         self.hp_img = pg.image.load(f"fig/hp2.png") #hpバー
         self.hp_img = pg.transform.scale(self.hp_img, (852, 100)) #hpバー画像のサイズ調整 
-        self.time = 0
+        self.time = 4549
     
     def update(self, screen: pg.Surface):
         """
@@ -380,16 +380,19 @@ class Hp_bar:
         screen.blit(self.black, [WIDTH-590, 60]) #黒四角形表示
         fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 30)
         txt = fonto.render(str(self.time//50), True, (255, 0, 0))
-        self.time += 1
-        if self.time <= 500: #1桁の時
+        self.time -= 1
+        if 0 <= self.time < 500: #1桁の時
             screen.blit(txt, [WIDTH/2-5, 58])
-        elif 500 < self.time <= 5000: #2桁の時
+        elif 500 <= self.time < 5000: #2桁の時
             screen.blit(txt, [WIDTH/2-12, 58])
-        elif 5000 < self.time <= 49950: #3桁の時
+        elif self.time < 0:
+            pg.draw.rect(self.black,(0, 0, 0), (0, 0, WIDTH-590, 100)) #黒四角形を生成
+            screen.blit(self.black, [WIDTH-590, 60]) #黒四角形表示
+            fonto = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 15)
+            txt = fonto.render("サドンデス", True, (255, 0, 0))
+            screen.blit(txt, [WIDTH/2-35, 65])
+        elif 5000 <= self.time < 49950: #3桁の時
             screen.blit(txt, [WIDTH/2-20, 58])
-        else: #上記以外の時(999以上の時)
-            max = fonto.render(str(999), True, (255, 0, 0)) #999で固定
-            screen.blit(max, [WIDTH/2-20, 58])
 
 
 class Player1_hp:
@@ -583,33 +586,6 @@ class CPU_Effect(pg.sprite.Sprite):
         self.image.set_alpha(self.alpha)
         screen.blit(self.image, self.rect)
         self.tmr += 1
-        
-
-class Skill_cut_1(pg.sprite.Sprite):
-    """
-    キャラに対応したスキルを発動
-    """
-    def __init__(self, life, num, screen: pg.Surface):
-        super().__init__()
-        self.life = life
-        self.image = pg.Surface((WIDTH, HEIGHT))
-        self.rect = self.image.get_rect()
-        pg.draw.rect(self.image, (0, 0, 0), (WIDTH/2, 0, 290, 190))
-        pg.draw.polygon(self.image, (255,255,255), [[630, 220], [865, 160], [900, 165], [935, 145], [WIDTH, 110],[WIDTH,260], [1050, 250], [970, 280], [630, 295], [500,280]]) 
-        pg.draw.polygon(self.image, (0,0,255), [[630, 230], [865, 170], [900, 175], [935, 155], [WIDTH, 120],[WIDTH,240], [1050, 240], [970, 270], [630, 285], [530,275]])       
-        #pg.draw.rect(self.image, (0, 0, 0), (WIDTH/2, 0, 290, 190))
-        #pg.draw.rect(self.image, (0, 0, 255), (WIDTH/2, 0, 270, 170))
-        self.image.set_alpha(200)
-        self.image_cut = pg.transform.rotozoom(pg.image.load(f"fig/{num}.png"), 0, 5)
-        self.rect_cut = self.image_cut.get_rect()
-
-    def update(self, screen):
-        self.life -= 1
-        screen.blit(self.image_cut, (WIDTH*5/7, HEIGHT*2/9))
-        if self.life < 0:
-            self.kill()
-        if check_bound(self.rect) != (True, True):
-            self.kill()
 
 
 class Skill_1(pg.sprite.Sprite):
@@ -667,33 +643,6 @@ class Skillpoint_1:
         pg.draw.circle(surface, (0, 0, 0), (x, y), radius_1/2) # 内側の円
         pg.draw.rect(surface, (0, 0, 0), (x, y - radius_1, radius_1, radius_1)) # 形を整えるための右上の四角
         surface.blit(self.gauge_img0_1, (x, y - radius_1))
-
-
-class Skill_cut_2(pg.sprite.Sprite):
-    """
-    キャラに対応したスキルを発動
-    """
-    def __init__(self, life, num, screen: pg.Surface):
-        super().__init__()
-        self.life = life
-        self.image = pg.Surface((WIDTH, HEIGHT))
-        self.rect = self.image.get_rect()
-        pg.draw.rect(self.image, (0, 0, 0), (WIDTH/2, 0, 290, 190))
-        pg.draw.polygon(self.image, (255,255,255), [[630, 220], [865, 160], [900, 165], [935, 145], [WIDTH, 110],[WIDTH,260], [1050, 250], [970, 280], [630, 295], [500,280]]) 
-        pg.draw.polygon(self.image, (0,0,255), [[630, 230], [865, 170], [900, 175], [935, 155], [WIDTH, 120],[WIDTH,240], [1050, 240], [970, 270], [630, 285], [530,275]])       
-        #pg.draw.rect(self.image, (0, 0, 0), (WIDTH/2, 0, 290, 190))
-        #pg.draw.rect(self.image, (0, 0, 255), (WIDTH/2, 0, 270, 170))
-        self.image.set_alpha(200)
-        self.image_cut = pg.transform.rotozoom(pg.image.load(f"fig/{num}.png"), 0, 5)
-        self.rect_cut = self.image_cut.get_rect()
-
-    def update(self, screen):
-        self.life -= 1
-        screen.blit(self.image_cut, (WIDTH*5/7, HEIGHT*2/9))
-        if self.life < 0:
-            self.kill()
-        if check_bound(self.rect) != (True, True):
-            self.kill()
 
 
 class Skill_2(pg.sprite.Sprite):
@@ -771,7 +720,7 @@ class Energy:
 
     def charge_energy(self):
         if self.energy < 100:
-            self.energy += 5
+            self.energy += 10
 
     def draw_bar(self, screen, player:int):
         # スキルゲージの長さを計算
@@ -817,6 +766,7 @@ def main():
     pg.display.set_caption("HADOU!!こうかとん!!")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/background.jpg")
+    bg_img_sadn = pg.image.load(f"fig/back_sd.jpg")
 
     #  BGMの再生
     bgm = pg.mixer.music.load("sound/BGM.mp3")
@@ -830,6 +780,7 @@ def main():
     blow_sound = sound_effect("deathblow", 1.0)
     fin1_sound = sound_effect("Fin1", 0.8)  # プレイヤー１が勝ったとき
     fin2_sound = sound_effect("Fin2", 0.7)  # プレイヤー２が勝ったとき
+    bell_sound = sound_effect("bell", 1.0)
     
     charas1 = Chara_1(3, (WIDTH*3/4+20, HEIGHT/2+50))
     energy1 = Energy(1)
@@ -902,7 +853,7 @@ def main():
                 P1_is_charging = False
        
                 P1s_flame = 1
-                charas1.image = charas1.imgs[(-1, 0)]
+                charas1.image = charas1.imgs[(charas1.dire)]
 
             # プレイヤー2
             if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
@@ -915,15 +866,15 @@ def main():
             if event.type == pg.KEYUP and event.key == pg.K_LSHIFT:  # 左SHIFTを離したとき
                 P2_is_charging = False
                 P2s_flame = 1
-                charas2.image = charas2.imgs[(+1, 0)]
+                charas2.image = charas2.imgs[(charas2.dire)]
 
         if P1_is_charging:  # プレイヤー1がボタンを押しているとき  
             P1s_flame +=1
-        if P1s_flame % 10 == 0:
+        if P1s_flame % 20 == 0:
             energy1.charge_energy()   # エネルギーをチャージする
         if P2_is_charging:  # プレイヤー2がボタンを押しているとき  
             P2s_flame +=1
-        if P2s_flame % 10 == 0:
+        if P2s_flame % 20 == 0:
             energy2.charge_energy()   # エネルギーをチャージする
         screen.blit(bg_img, [0, 0])
 
@@ -936,6 +887,42 @@ def main():
             f2.update(screen)
             f3.update(screen)
             f4.update(screen)
+
+        if hp_bar.time <= 0:
+            bell_sound.play()
+            screen.blit(bg_img_sadn, [0, 0])
+            if player1_hp.hp_value > 375 - player2_hp.damage_value:
+                exps.add(Explosion(charas2, 100))  # 爆発エフェクト
+                charas1.change_img(6, screen)  # こうかとん喜びエフェクト
+                charas2.change_img(82, screen) # こうかとん悲しみエフェクト
+                hp_bar.update(screen)
+                player1_hp.update(screen)
+                player2_hp.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                return
+            elif player1_hp.hp_value < 375 - player2_hp.damage_value:
+                exps.add(Explosion(charas1, 100))  # 爆発エフェクト
+                charas2.change_img(62, screen)  # こうかとん喜びエフェクト
+                charas1.change_img(8, screen) # こうかとん悲しみエフェクト
+                hp_bar.update(screen)
+                player1_hp.update(screen)
+                player2_hp.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                return
+            # else:
+            #     fonto = pg.font.Font(None, 80)
+            #     txt = fonto.render("DRAW", True, (255, 0, 0))
+            #     screen.blit(txt, [WIDTH/2-80, HEIGHT/2])
+            #     charas1.update(key_lst, screen)
+            #     charas2.update(key_lst, screen)
+            #     hp_bar.update(screen)
+            #     player1_hp.update(screen)
+            #     player2_hp.update(screen)
+            #     pg.display.update()
+            #     time.sleep(2)
+            #     return
     
         #  スライムたちの描画
         if tmr>= 100 and cpu_flag == False:
@@ -1160,31 +1147,32 @@ def main():
                 fin2_sound.fadeout(4)
                 return
 
-
-        #  バリアの設定
+                #  バリアの設定
         keys = pg.key.get_pressed()
         # ↑, ↓, ←, →が同時押しされていればcharas1のバリア
-        if keys[pg.K_UP] and keys[pg.K_DOWN] and keys[pg.K_LEFT] and keys[pg.K_RIGHT]:
+        if keys[pg.K_UP] and keys[pg.K_DOWN] and keys[pg.K_LEFT] and keys[pg.K_RIGHT] and energy1.energy >= 50:
             key_hold_time1 += 1
             if key_hold_time1 >= hold_time and charas1.state != "hyper":
                 charas1.state = "hyper"  # バリア状態
-                charas1.hyper_life = 500  # 発動時間の設定
+                charas1.hyper_life = 100  # 発動時間の設定
                 barrier1.empty()  # 既存のバリア1の削除
                 barrier1.add(Barrier1(charas1))  # バリア生成
+                energy1.energy -= 50  # エネルギー50消費
         else:
             key_hold_time1 = 0
 
         # w, a, s, dが同時押しされていればchara2のバリア
-        if keys[pg.K_w] and keys[pg.K_a] and keys[pg.K_s] and keys[pg.K_d]:
+        if keys[pg.K_w] and keys[pg.K_a] and keys[pg.K_s] and keys[pg.K_d] and energy2.energy >= 50:
             key_hold_time2 += 1
             if key_hold_time2 >= hold_time and charas2.state != "hyper":
                 charas2.state = "hyper"  # バリア状態
-                charas2.hyper_life = 500  # 発動時間の設定
+                charas2.hyper_life = 100  # 発動時間の設定
                 barrier2.empty()  # 既存のバリア2の削除
                 barrier2.add(Barrier2(charas2))  # バリア生成
+                energy2.energy -= 50  # エネルギー50消費
         else:
             key_hold_time2 = 0
-
+ 
 
         #  アップデート
         cpu1.update()
@@ -1192,12 +1180,12 @@ def main():
         cpu2.update()
         cpu2.draw(screen)
 
-        if P1_is_charging:
+        if P1_is_charging and P1s_flame >= 5:
             charas1.change_img(1, screen)
         else:
             charas1.update(key_lst, screen)
 
-        if P2_is_charging:
+        if P2_is_charging and P2s_flame >= 5:
             charas2.change_img(12, screen)
         else:
             charas2.update(key_lst, screen)
