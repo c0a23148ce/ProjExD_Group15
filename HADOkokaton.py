@@ -651,7 +651,7 @@ class Skillpoint_1:
         angle_1 = (current_1 / maximum_1) * 360  # 充填率を角度に変換
         start_angle_1 = 90  #90度から描画する
         end_angle_1 = start_angle_1 + 270/360 * angle_1
-        pg.draw.arc(surface, (0, 0, 255), (x - radius_1, y - radius_1, 2 * radius_1, 2 * radius_1), math.radians(start_angle_1), math.radians(end_angle_1), width=radius_1)
+        pg.draw.arc(surface, (0, 255, 255), (x - radius_1, y - radius_1, 2 * radius_1, 2 * radius_1), math.radians(start_angle_1), math.radians(end_angle_1), width=radius_1)
         pg.draw.circle(surface, (0, 0, 0), (x, y), radius_1/2) # 内側の円
         pg.draw.rect(surface, (0, 0, 0), (x, y - radius_1, radius_1, radius_1)) # 形を整えるための右上の四角
         surface.blit(self.gauge_img0_1, (x, y - radius_1))
@@ -732,7 +732,7 @@ class Skillpoint_2:
         angle_2 = (current_2 / maximum_2) * 360  # 充填率を角度に変換
         start_angle_2 = 90  #90度から描画する
         end_angle_2 = start_angle_2 + 270/360 * angle_2
-        pg.draw.arc(surface, (0, 0, 255), (x - radius_2, y - radius_2, 2 * radius_2, 2 * radius_2), math.radians(start_angle_2), math.radians(end_angle_2), width=radius_2)
+        pg.draw.arc(surface, (0, 255, 255), (x - radius_2, y - radius_2, 2 * radius_2, 2 * radius_2), math.radians(start_angle_2), math.radians(end_angle_2), width=radius_2)
         pg.draw.circle(surface, (0, 0, 0), (x, y), radius_2/2) # 内側の円
         pg.draw.rect(surface, (0, 0, 0), (x, y - radius_2, radius_2, radius_2)) # 形を整えるための右上の四角
         surface.blit(self.gauge_img0_2, (x, y - radius_2))
@@ -744,26 +744,34 @@ class Energy:
     def __init__(self, player: int):
         self.energy = 100
         self.player = player
-        self.font = pg.font.Font(None, 50)
-        self.color = (0, 0, 255)  # (255, 212, 20)にしたい
-        self.image = self.font.render(f"E: {self.energy}", 0, self.color)  # Energyに変える
         
         if self.player == 1:
-            self.rect = self.image.get_rect(center=(WIDTH*(3/4), HEIGHT-20))
-            self.rect.center = WIDTH*(3/4)-30, HEIGHT-20
-        else:
-            self.rect = self.image.get_rect(center=(WIDTH*(1/4), HEIGHT-20))
-            self.rect.center = WIDTH*(1/4)-80, HEIGHT-20
+            self.WIDTH = WIDTH - 500
+        if self.player == 2:
+            self.WIDTH = 100
 
     def reduce_energy(self):
-        self.energy -= 10
+        self.energy -= 20
 
     def charge_energy(self):
-        self.energy += 1
-    
-    def update(self, screen: pg.Surface):
-        self.image = self.font.render(f"Energy: {self.energy}", 0, self.color)
-        screen.blit(self.image, self.rect)
+        if self.energy < 100:
+            self.energy += 5
+
+    def draw_bar(self, screen, player:int):
+        # スキルゲージの長さを計算
+        bar_length = 4
+        bar_height = 30
+        fill = self.energy * bar_length
+        segment_width = 400 / 5  # 5分割する
+
+        pg.draw.rect(screen, (0, 0, 0), (self.WIDTH, 90, 400, bar_height)) # ゲージ背景
+        if player == 1: # スキルゲージの描画
+            pg.draw.rect(screen, (0 ,0 ,255), (self.WIDTH, 90, fill, bar_height)) # ゲージ
+        if player == 2: # スキルゲージの描画-反転
+            pg.draw.rect(screen, (0 ,0 ,255), (self.WIDTH + (400 - fill), 90, fill, bar_height)) # ゲージ
+        for i in range(5): # ５等分した枠線
+            pg.draw.rect(screen, (255, 255, 255), (self.WIDTH + i * segment_width, 90, segment_width, bar_height), 2)
+
         
 
 def main():
@@ -804,7 +812,7 @@ def main():
     skill_gauge_value_2 = 0
     max_value_1 = 100
     max_value_2 = 100
-
+    
 
     tmr = 0
     P1s_flame = 1
@@ -826,7 +834,7 @@ def main():
                 return 0
             # プレイヤー1に関して
             if event.type == pg.KEYDOWN and event.key == pg.K_RSHIFT:
-                if energy1.energy >= 10:  # エネルギーが残っていれば
+                if energy1.energy >= 20:  # エネルギーが残っていれば
                     beams1.add(Beam_1(charas1))# ビーム発射！
                     energy1.reduce_energy()
                     # charas1.change_img(1, screen)  # ここ絶対に消せ
@@ -838,7 +846,7 @@ def main():
                 charas1.image = charas1.imgs[(-1, 0)]
             # プレイヤー2に関して
             if event.type == pg.KEYDOWN and event.key == pg.K_LSHIFT:
-                if energy2.energy >= 10:  # エネルギーが残っていれば
+                if energy2.energy >= 20:  # エネルギーが残っていれば
                     beams2.add(Beam_2(charas2))# ビーム発射！
                     energy2.reduce_energy()
                     # charas2.change_img(1, screen)  # ここ絶対に消せ
@@ -851,11 +859,11 @@ def main():
 
         if P1_is_charging:  # プレイヤー1がボタンを押しているとき  
             P1s_flame +=1
-        if P1s_flame % 4 == 0:
+        if P1s_flame % 10 == 0:
             energy1.charge_energy()   # エネルギーをチャージする
         if P2_is_charging:  # プレイヤー2がボタンを押しているとき  
             P2s_flame +=1
-        if P2s_flame % 4 == 0:
+        if P2s_flame % 10 == 0:
             energy2.charge_energy()   # エネルギーをチャージする
         screen.blit(bg_img, [0, 0])
 
@@ -1078,7 +1086,6 @@ def main():
             charas1.change_img(1, screen)
         else:
             charas1.update(key_lst, screen)
-        energy1.update(screen)
         if P2_is_charging:
             charas2.change_img(12, screen)
         else:
@@ -1088,7 +1095,6 @@ def main():
                     barrier1.draw(screen)
 
         charas2.update(key_lst, screen)
-        energy2.update(screen)
         if charas2.state == "hyper":
             for i in barrier2:
                 i.update(charas2)
@@ -1107,6 +1113,9 @@ def main():
         hp_bar.update(screen)
         player1_hp.update(screen)
         player2_hp.update(screen)
+        energy1.draw_bar(screen, 1)
+        energy2.draw_bar(screen, 2)
+
         skillpoint1.draw_gauge(screen, WIDTH -50, 70, 50, skill_gauge_value_1, max_value_1)
         skill1.update()
         skill1.draw(screen)
